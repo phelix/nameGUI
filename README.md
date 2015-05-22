@@ -8,8 +8,14 @@ Start by launching namegui.py or nameguiwin.pyw on Windows to suppress the conso
 
 There are no copy/paste menues yet but you can use ctrl-c/v
 
+Source on Github: https://github.com/phelixnmc/nameGUI
+Discussion on the Namecoin forum: https://forum.namecoin.info/viewtopic.php?p=14920
+
 toDo
 ====
+* bug: pending shows name in value
+* review database
+* better error handling and messages
 * unlock wallet / lock / forget pw (model?)
 * less rpc calls while blockchain not up to date yet
 * copy/paste menues
@@ -21,7 +27,6 @@ toDo
 * sort columns
   http://stackoverflow.com/questions/1966929/tk-treeview-column-sort
   http://stackoverflow.com/questions/22032152/python-ttk-treeview-sort-numbers
-
 
 canDo
 =====
