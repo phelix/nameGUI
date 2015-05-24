@@ -5,7 +5,13 @@ import sys
 sys.path.append("lib")
 
 import splashscreen
-splashscreen.splash("gfx/splash.gif", favicon='gfx/favicon.ico')
+import os
+
+favicon = None
+#favicon = "gfx/favicon.gif"  # somebody try this on linux / mac
+if os.name == "ntdd":
+    favicon = "gfx/favicon.ico"
+splashscreen.splash("gfx/splash.gif", favicon=favicon)
 
 import ttkinter as tk
 
@@ -101,7 +107,7 @@ class Gui(object):
         # set up window
         self.root.report_callback_exception = self.show_error
         self.root.title("nameGUI - Namecoin RPC Frontend")
-        self.root.wm_iconbitmap(bitmap='gfx/favicon.ico', default='gfx/favicon.ico')
+        self.root.wm_iconbitmap(bitmap=favicon, default=favicon)
         self.root.protocol("WM_DELETE_WINDOW", self.shutdown)
         self.root.focus_force()
         self.root.mainloop()
