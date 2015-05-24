@@ -28,7 +28,8 @@ import base64
 import socket
 import json
 import sys
-from os import path, environ
+import os
+import platform
 import time
 import traceback
 
@@ -216,19 +217,14 @@ class CoinRpc(object):
             raise RpcConnectionError("Socket error in RPC connection to " +
                                      "%s: %s" % (str(self.connectionType), str(exc)))
 
-    def lookup_conf_folder(self):
-        if sys.platform == "darwin":
-            if "HOME" in environ:
-                dataFolder = path.join(os.environ["HOME"],
-                                       "Library/Application Support/", COINAPP) + '/'
-            else:
-                print ("Could not find home folder, please report.")
-                sys.exit()
-        elif "win32" in sys.platform or "win64" in sys.platform:
-            dataFolder = path.join(environ["APPDATA"], COINAPP) + "\\"
-        else:
-            dataFolder = path.join(environ["HOME"], ".%s" % COINAPP) + "/"
-        return dataFolder
+    # after nmcontrol platformDep.py
+    def get_conf_folder(self, coin=COINAPP):
+        coin = coin.lower()
+        if platform.system() == "Darwin":
+            return os.path.expanduser("~/Library/Application Support/" + coin.capitalize())
+        elif platform.system() == "Windows":
+            return os.path.join(os.environ['APPDATA'], coin.capitalize())
+        return os.path.expanduser("~/." + coin)
 
     def get_options(self):
         if self.connectionType == CONTYPECLIENT:
@@ -242,8 +238,8 @@ class CoinRpc(object):
         options = {}
         options["rpcport"] = DEFAULTCLIENTPORT
         if not self.datadir:
-            self.datadir = self.lookup_conf_folder()
-        with open(self.datadir + COINAPP + ".conf") as f:
+            self.datadir = self.get_conf_folder()
+        with open(self.datadir + "/" + COINAPP + ".conf") as f:
             while True:
                 line = f.readline()
                 if line == "":
