@@ -258,7 +258,7 @@ class CoinRpc(object):
             self.call("sendtoaddress", ["", 0.00000001])  # Certainly there is a more elegant way to check for a locked wallet?
         except WalletUnlockNeededError:
             return True
-        except WalletError:
+        except (WalletError, InvalidAddressOrKeyError):
             return False
 
     def chainage(self):
