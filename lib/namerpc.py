@@ -23,7 +23,9 @@
 
 # todo: proper translation of error codes
 # todo: setting an empty value does not work
+# separate NMControl and client?
 
+import authproxy
 import base64
 import socket
 import json
@@ -43,6 +45,8 @@ HOST = "127.0.0.1"
 
 CONTYPECLIENT = "client"
 CONTYPENMCONTROL = "nmcontrol"
+
+DEBUG = 0
 
 class RpcError(Exception):
     """Server returned error."""
@@ -109,8 +113,8 @@ class CoinRpc(object):
     """connectionType: auto, nmcontrol or client"""
     def __init__(self, connectionType="auto", options=None, datadir=None, timeout=5):
         self.bufsize = 4096
-        self.queryid = 1
         self.host = HOST
+        self.authServiceProxy = None
 
         self.timeout = timeout  # If set to None the global default will be used.
 
@@ -122,8 +126,20 @@ class CoinRpc(object):
         if options == None:
             self.options = self.get_options()
 
+        if DEBUG:
+            print "options:", self.options
+
         if not connectionType in [CONTYPECLIENT, CONTYPENMCONTROL]:
             self._detect_connection()
+
+        if self.connectionType == CONTYPECLIENT and not self.authServiceProxy:
+            self.setup_authServiceProxy()
+
+    def setup_authServiceProxy(self):
+        s = ("http://" + str(self.options["rpcuser"]) + ":" +
+            str(self.options["rpcpassword"]) +"@" + self.host +
+            ":" + str(self.options["rpcport"]))
+        self.authServiceProxy = authproxy.AuthServiceProxy(s)
 
     def _detect_connection(self):
         options = self.options
@@ -141,6 +157,7 @@ class CoinRpc(object):
         self.connectionType = CONTYPECLIENT
         if options == None:
             self.options = self.get_options()
+        self.setup_authServiceProxy()
         try:
             self.call("help")
         except:
@@ -148,53 +165,37 @@ class CoinRpc(object):
             raise RpcConnectionError("Auto detect connection failed: " + errorString)
 
     def call(self, method="getinfo", params=[]):
-        data = {"method": method, "params": params, "id": self.queryid}
         if self.connectionType == CONTYPECLIENT:
-          resp = self.query_http(json.dumps(data))
+            val = {"error" : None, "code":None}
+            try:
+                if params:
+                    val["result"] = self.authServiceProxy.__getattr__(method)(*params)
+                else:
+                    val["result"] = self.authServiceProxy.__getattr__(method)()
+            except authproxy.JSONRPCException as e:
+                val = {"error" : e.error}
+                try:
+                    val["code"] = e.error["code"]
+                except KeyError:
+                    val["code"] = "NA"
+            except Exception as e:
+                raise RpcError(e)
         elif self.connectionType == CONTYPENMCONTROL:
-          resp = self.query_server(json.dumps(data))
+            data = {"method": method, "params": params}
+            resp = self.query_server(json.dumps(data))
+            resp = resp.decode(encoding)
+            val = json.loads(resp)
         else:
-          assert False
-        resp = resp.decode(encoding)
-        val = json.loads(resp)
+            assert False
 
-        if self.connectionType != CONTYPENMCONTROL and val["id"] != self.queryid:
-            raise Exception("ID mismatch in JSON RPC answer.")
-        self.queryid = self.queryid + 1
-
-        if val["error"] is not None:
+        if val["error"]:
             if self.connectionType == CONTYPECLIENT:
                 for e in clientErrorClasses:
                     if e.code == val["error"]["code"]:
-                        #print e.code
                         raise e
             raise RpcError(val)  # attn: different format for client and nmcontrol
 
         return val["result"]
-
-    def query_http(self, data):
-        """Query the server via HTTP. (client)"""
-        header = "POST / HTTP/1.1\n"
-        header += "User-Agent: coinrpc\n"
-        header += "Host: %s\n" % self.host
-        header += "Content-Type: application/json\n"
-        header += "Content-Length: %d\n" % len (data)
-        header += "Accept: application/json\n"
-        authstr = "%s:%s" % (self.options["rpcuser"], self.options["rpcpassword"])
-        header += "Authorization: Basic %s\n" % base64.b64encode (authstr)
-
-        resp = self.query_server("%s\n%s" % (header, data))
-        lines = resp.split("\r\n")
-        result = None
-        body = False
-        for line in lines:
-            if line == "" and not body:
-                body = True
-            elif body:
-                if result is not None:
-                    raise Exception("Expected a single line in HTTP response.")
-                result = line
-        return result
 
     def query_server(self, data):
         """Helper routine sending data to the RPC server and returning the result."""
@@ -217,7 +218,7 @@ class CoinRpc(object):
             raise RpcConnectionError("Socket error in RPC connection to " +
                                      "%s: %s" % (str(self.connectionType), str(exc)))
 
-    # after nmcontrol platformDep.py
+    # ~ nmcontrol platformDep.py
     def get_conf_folder(self, coin=COINAPP):
         coin = coin.lower()
         if platform.system() == "Darwin":
@@ -258,7 +259,7 @@ class CoinRpc(object):
             self.call("sendtoaddress", ["", 0.00000001])  # Certainly there is a more elegant way to check for a locked wallet?
         except WalletUnlockNeededError:
             return True
-        except (WalletError, InvalidAddressOrKeyError):
+        except (WalletError, InvalidAddressOrKeyError, MiscError):
             return False
 
     def chainage(self):
@@ -290,6 +291,10 @@ class CoinRpc(object):
         return data
 
 if __name__ == "__main__":
+    rpc = CoinRpc(connectionType=CONTYPECLIENT)
+    print rpc.call("getblockhash", [33])
+    print rpc.call("getinfo")
+    #print rpc.nm_show("d/nx")
 
     if len(sys.argv) == 1:
         print "========auto detect"
