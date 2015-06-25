@@ -19,7 +19,7 @@ toDo
 * unlock wallet / lock / forget pw (model?)
 * less rpc calls while blockchain not up to date yet
 * copy/paste menues
-* get proper conf folder ("namecoin"?) for logfile and namenewdb
+* x get proper conf folder ("namecoin"?) for logfile and namenewdb
 * lock file to be only able to open one instance
 * launch namecoin client? / check if client available
 * auto lookup name new field

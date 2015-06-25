@@ -6,8 +6,7 @@ import lineperdic
 import mylogging
 
 import shared
-
-nameNewDbFilename = "nameNewDb.txt"
+import util
 
 VALIDCHARS = "abcdefghijklmnopqrstuvwxyz1234567890-/"
 POLLSECONDS = 3
@@ -52,10 +51,11 @@ class Model(object):
         self.blockHashPrev = None
         self.isLocked = None
 
-        self.nameNewDb = lineperdic.LPD(nameNewDbFilename)
+        util.ensure_dirs(shared.CONFFOLDER)
+        self.nameNewDb = lineperdic.LPD(shared.NAMENEWDBFILENAMEPATH)
 
         self.log = mylogging.getMyLogger(name="model", levelConsole=shared.LOGLEVELCONSOLE,
-                                         filename=shared.LOGFILE, levelFile=shared.LOGLEVELFILE)
+                                         filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
 
         # rpc does currently not work asynchronously
         self._rpc = namerpc.CoinRpc(connectionType="client")  # poll
@@ -85,12 +85,12 @@ class Model(object):
                 self.callback_poll_start()
                 #self.log.trace("poll start")
                 self.isLocked = self._rpc.is_locked()
+                self.blockCount = self._rpc.call("getblockcount")
                 self.blockchainUptodate = self._rpc.blockchain_is_uptodate()
                 if not self.blockchainUptodate:
                     self.log.debug("waiting for blockchain, ", self._rpc.call("getblockcount"))
                 else:
                     hPrev = None
-                    self.blockCount = self._rpc.call("getblockcount")
                     blockHash = self._rpc.call("getblockhash", [self.blockCount])
                     if self._updateNow or blockHash != self.blockHashPrev:
                         self._update()

@@ -9,7 +9,7 @@ import os
 
 favicon = None
 #favicon = "gfx/favicon.gif"  # somebody try this on linux / mac
-if os.name == "ntdd":
+if os.name == "nt":
     favicon = "gfx/favicon.ico"
 splashscreen.splash("gfx/splash.gif", favicon=favicon)
 
@@ -27,7 +27,7 @@ import mylogging
 import shared
 
 log = mylogging.getMyLogger(name="gui", levelConsole=shared.LOGLEVELCONSOLE,
-                            filename=shared.LOGFILE, levelFile=shared.LOGLEVELFILE)
+                            filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
 
 class SelectionEmptyError(Exception):
     pass
@@ -245,7 +245,7 @@ class Gui(object):
     def transfer(self):
         name = self.get_selection()
         result = namedialog.NameTransferDialog(self.root, name,
-                                                             self.validate_address).result
+                                               self.validate_address).result
         if result == None:  # cancelled
             return
         value, targetAddress = result  # unpack tuple
