@@ -1,4 +1,4 @@
-# Copyright (C) 2014 by phelix / blockchained.com
+# Copyright (C) 2014-2015 by phelix / blockchained.com
 # Copyright (C) 2013 by Daniel Kraft <d@domob.eu>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,6 +21,9 @@
 
 # todo: read NMControl config files
 
+# todo: read datadir path from registry
+
+# todo: timeout authproxy
 # todo: proper translation of error codes
 # todo: setting an empty value does not work
 # separate NMControl and client?
@@ -192,7 +195,7 @@ class CoinRpc(object):
             if self.connectionType == CONTYPECLIENT:
                 for e in clientErrorClasses:
                     if e.code == val["error"]["code"]:
-                        raise e
+                        raise e(val["error"])
             raise RpcError(val)  # attn: different format for client and nmcontrol
 
         return val["result"]
@@ -240,27 +243,34 @@ class CoinRpc(object):
         options["rpcport"] = DEFAULTCLIENTPORT
         if not self.datadir:
             self.datadir = self.get_conf_folder()
-        with open(self.datadir + "/" + COINAPP + ".conf") as f:
-            while True:
-                line = f.readline()
-                if line == "":
-                    break
-                parts = line.split ("=")
-                if len(parts) == 2:
-                    key = parts[0].strip()
-                    val = parts[1].strip()
-                    options[key] = val
+        try:
+            filename = self.datadir + "/" + COINAPP + ".conf"
+            with open(filename) as f:
+                while True:
+                    line = f.readline()
+                    if line == "":
+                        break
+                    parts = line.split ("=")
+                    if len(parts) == 2:
+                        key = parts[0].strip()
+                        val = parts[1].strip()
+                        options[key] = val
+        except IOError as e:
+            if e.errno == 2:
+                raise IOError(e.errno, "namerpc: Could not open .conf file: " + str(filename))
         return options
 
 
     # comfort functions
-    def is_locked(self):
-        try:
-            self.call("sendtoaddress", ["", 0.00000001])  # Certainly there is a more elegant way to check for a locked wallet?
-        except WalletUnlockNeededError:
-            return True
-        except (WalletError, InvalidAddressOrKeyError, MiscError):
-            return False
+
+# better use getinfo
+##    def is_locked(self):
+##        try:
+##            self.call("sendtoaddress", ["", 0.00000001])  # Certainly there is a more elegant way to check for a locked wallet?
+##        except WalletUnlockNeededError:
+##            return True
+##        except (WalletError, InvalidAddressOrKeyError, MiscError):
+##            return False
 
     def chainage(self):
         c = self.call("getblockcount")

@@ -13,29 +13,34 @@ Discussion on the Namecoin forum: https://forum.namecoin.info/viewtopic.php?p=14
 
 toDo
 ====
+* d/ and id/ namespace config
+* show pending operations (name_update, new value?)
 * bug: pending shows name in value
-* review database
 * better error handling and messages
-* unlock wallet / lock / forget pw (model?)
-* less rpc calls while blockchain not up to date yet
-* copy/paste menues
-* x get proper conf folder ("namecoin"?) for logfile and namenewdb
-* lock file to be only able to open one instance
-* launch namecoin client? / check if client available
-* auto lookup name new field
-* show pending operations (name_update)
-* sort columns
-  http://stackoverflow.com/questions/1966929/tk-treeview-column-sort
-  http://stackoverflow.com/questions/22032152/python-ttk-treeview-sort-numbers
+* review database
+x? * fix wrong wallet locked display while downloading blocks
+x * auto lookup name new field
+x * sort columns
+x * unlock wallet / lock / forget pw (model?)
+x * copy/paste menues
+x * get proper conf folder for logfile and namenewdb
+
 
 canDo
 =====
+* right click menu for treeview table
+* improve display of lookup data
+* make lookup data clickable (e.g. email)
 * warn from expiry
+* integrate atomic name trading (antpy / nametrade.py)
+* launch namecoin client? / check if client available
 * filter columns
+* lock file to be only able to open one instance
 * allow empty values / space only in values
 * stash name_firstupdate fee into name_new address (needs raw tx?)
 * make tkMessageBox styled (should be with py3)
 * allow selection and processing of multiple items
+* less rpc calls while blockchain not up to date yet
 * identify wallet via getnewaddress / getaccount <address> ???
 
 License

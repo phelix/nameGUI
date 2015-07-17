@@ -1,6 +1,3 @@
-
-#         tk.Frame.columnconfigure(10, minsize=minColumnWidth)
-
 import sys
 sys.path.append("lib")
 
@@ -26,6 +23,8 @@ import traceback
 import mylogging
 import shared
 
+import json
+
 log = mylogging.getMyLogger(name="gui", levelConsole=shared.LOGLEVELCONSOLE,
                             filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
 
@@ -36,48 +35,58 @@ class Gui(object):
     def __init__(self):
         log.info("__init__ #########################################################")
         self.root = tk.Tk()
+        self.root.withdraw()  # hide for now in case an error comes up so the error window is visible
 
-##        # logo - transparent logo is more complicated
-##        image = tk.PhotoImage(file="namecoin_gui_g.gif")
-##        canvas = tk.Canvas(self.root, width=image.width() + 10,
-##                           height=image.height() + 10).grd(column=10)
-##        canvas.create_image((5,5), anchor="nw", image=image)
-##        canvas.image = image  # keep reference
-
+        # client info
         tk.Label(self.root, justify="left", text="Connected:").grd(row=10, column=10)
         self.labelConnected = tk.Label(self.root, justify="left", text="...").grd(row=10, column=20)
-
-        tk.Label(self.root, justify="left", text="Model RPC update:").grd(row=15, column=10)
-        self.labelModelUpdating = tk.Label(self.root, justify="left", text="...").grd(row=15, column=20)
-
-        # remove as it is not so precise?
-        tk.Label(self.root, justify="left", text="Blockchain is up to date:").grd(row=17, column=10)
-        self.labelBlockchainIsUpToDate = tk.Label(self.root, justify="left", text="...").grd(row=17,column=20)
 
         tk.Label(self.root, justify="left", text="Block height:").grd(row=20, column=10)
         self.labelBlockCount = tk.Label(self.root, justify="left", text="...").grd(row=20,column=20)
 
-        tk.Label(self.root, justify="left", text="Wallet locked:").grd(row=23, column=10)
-        self.labelWalletLocked = tk.Label(self.root, justify="left", text="...").grd(row=23,column=20)
+        # remove as it is not so precise?
+        tk.Label(self.root, justify="left", text="Blockchain is up to date:").grd(row=20, column=30)
+        self.labelBlockchainIsUpToDate = tk.Label(self.root, justify="left", text="...").grd(row=20,column=40)
 
         tk.Label(self.root, justify="left", text="Balance:").grd(row=25, column=10)
         self.labelBalance = tk.Label(self.root, justify="left", text="...").grd(row=25,column=20)
 
+        tk.Label(self.root, justify="left", text="Wallet locked:").grd(row=25, column=30)
+        self.labelWalletLocked = tk.Label(self.root, justify="left", text="...").grd(row=25,column=40)
+
+        # register name
         tk.Label(self.root, justify="left", text="New name:").grd(row=30, column=10)
         self.newEntry = tk.Entry(self.root).grd(row=30, column=20)
         self.newEntry.insert(0, "d/")
-        self.newEntry.bind("<Return>", self.name_new)
-        nameNewButton = tk.Button(self.root, text="register", command=self.name_new).grd(row=30, column=30)
-        #nameNewButton = tk.Button(self.root, text="quit", command=self.shutdown).grd()
+        self.newEntry.bind("<Return>", self.register_name)
+        self.newEntry.bind("<KeyRelease>", self.event_key_release_register)
+        self.newEntry.bind("<<menu_modified>>", self.event_key_release_register)
+        self.newEntry.bind("<Escape>", lambda trash: self.newEntry.set(""))
+        nameNewButton = tk.Button(self.root, text="register", command=self.register_name
+                                  ).grd(row=30, column=30)
+        tk.Button(self.root, text="copy value", command=lambda: self.copy_field_external("value")
+                  ).grd(row=30, column=40)        
+        tk.Button(self.root, text="copy address", command=lambda: self.copy_field_external("address")
+                  ).grd(row=30, column=50)
 
-        # table
-        self.tv = tk.Treeview(self.root).grd(row=40, column=10, columnspan=100)
+        # name lookup info
+        self.displayNameDataLabel = tk.Label(self.root, justify="left", text=""
+                                         ).grd(row=35, column=20, columnspan=120, sticky="w")
+        self.displayValueLabel = tk.Label(self.root, justify="left", text=""
+                                          ).grd(row=36, column=20, columnspan=120, sticky="w")
+
+        # name table
+        columns = ("name", "value", "address", "status", "expires_in")
+        self.tv = tk.Treeview(self.root, columns=columns, capitalizeHeadings=True
+                              ).grd(row=40, column=10, columnspan=100, sticky="nesw")
+        self.root.columnconfigure(105, weight=10)  #minsize=minColumnWidth
+        self.root.rowconfigure(40, weight=10)
         self.tv["selectmode"] = "browse"  # only allow to select a single item
-        self.tv["columns"] = ("name", "value", "address", "status", "expires_in")
+
         self.tv['show'] = 'headings'  # hide identifier and +
         ysb = tk.Scrollbar(self.root, orient='vertical', command=self.tv.yview).grd(
-            row=40, column=110, sticky="ns")
-        #xsb = ttk.Scrollbar(self, orient='horizontal', command=self.t.xview)
+            row=40, column=110, sticky="nesw")
+        #xsb = ttk.Scrollbar(self, orient='horizontal', command=self.t.xview)  # enable/hide automatically?
         self.tv.configure(yscroll=ysb.set) #, xscroll=xsb.set)
         for c in self.tv["columns"]:
             self.tv.heading(c, text=c.capitalize(), anchor="w")
@@ -87,21 +96,28 @@ class Gui(object):
         self.root.bind("<Button-4>", self.on_scroll_event) # Linux A
         self.root.bind("<Button-5>", self.on_scroll_event) # Linux B
 
-        # buttons
-        renewButton = tk.Button(self.root, text="renew", command=self.renew
-                                ).grd(row=50, column=10)
-        configureButton = tk.Button(self.root, text="configure value",
-                                    command=self.configure).grd(row=50, column=20)
-        transferButton = tk.Button(self.root, text="transfer name",
-                                   command=self.transfer).grd(row=50, column=30)
+        # name buttons
+        tk.Button(self.root, text="renew", command=self.renew
+                  ).grd(row=50, column=10)
+        tk.Button(self.root, text="configure value", command=self.configure
+                  ).grd(row=50, column=20)
+        tk.Button(self.root, text="transfer name", command=self.transfer
+                  ).grd(row=50, column=30)
 
-        self.model = model.Model()
+        tk.Button(self.root, text="copy name", command=lambda: self.copy_field("name")
+                  ).grd(row=50, column=40)
+        tk.Button(self.root, text="copy value", command=lambda: self.copy_field("value")
+                  ).grd(row=50, column=50)
+        tk.Button(self.root, text="copy address", command=lambda: self.copy_field("address")
+                  ).grd(row=50, column=60)        
+
+        # set up model
+        self.model = namedialog.MyModel()
         self.model.callback_poll_start = self._model_callback_poll_start
         self.model.callback_poll_end = self._model_callback_poll_end
 
         # update loop
         self.root.after(300, func=self.set_info)
-
         self.stopping = False
 
         # set up window
@@ -110,10 +126,55 @@ class Gui(object):
         self.root.wm_iconbitmap(bitmap=favicon, default=favicon)
         self.root.protocol("WM_DELETE_WINDOW", self.shutdown)
         self.root.focus_force()
+        self.root.deiconify()
+
+        # start gui loop
+        log.info("__init__: starting mainloop")
         self.root.mainloop()
 
-    def show_error(self, *args):
-        err = traceback.format_exception(*args)
+    def set_clipboard(self, s):
+        self.root.clipboard_clear()
+        self.root.clipboard_append(s, type="STRING")
+
+    def copy_field_external(self, f):
+        name = self.newEntry.get()
+        r = self.model.name_show(name)
+        self.set_clipboard(r[f])
+
+    def copy_field(self, f):
+        name = self.get_selection()
+        if f == "name":
+            self.set_clipboard(name)
+        else:
+            self.set_clipboard(self.model.names[name][f])        
+
+    def event_key_release_register(self, *trash):
+        name = self.newEntry.get()
+        if name == "":
+            self.displayValueLabel["text"] = ""
+            self.displayNameDataLabel["text"] = ""            
+            return
+        try:
+            r = self.model.name_show(name)
+        except model.NameDoesNotExistError:
+            self.displayValueLabel["text"] = "<available for registration>"
+            self.displayNameDataLabel["text"] = ""
+            return
+
+        v = str(r["value"])
+        if len(v) > 100:
+            v = v[:130] + "..."        
+        self.displayValueLabel["text"] = v
+
+        r.pop("value")  # in place operation
+        r.pop("txid")
+        self.displayNameDataLabel["text"] = json.dumps(r)
+
+    def show_error(self, exc_type, exc_value, exc_traceback):
+        if exc_type == SelectionEmptyError:
+            return
+        err = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        log.exception("Error in GUI loop:")
         tkMessageBox.showerror('Exception', err)
 
     def shutdown(self):
@@ -141,8 +202,8 @@ class Gui(object):
     def set_info(self):
         name = None
         data = None
+        #log.debug("set_info")
         try:
-            # can't call rpc functions here, causes rpc id mismatches --> model
             self.labelConnected["text"] = "yes" if self.model.connected else "no"
             self.labelBlockCount["text"] = self.model.blockCount
             self.labelBalance["text"] = "%.6f" % self.model.balance
@@ -157,13 +218,11 @@ class Gui(object):
 
             # todo: only update changed data
             for name in self.model.names:
-                #print n, self.model.names[n]
                 data = self.model.names[name]
 
                 # make sure all names are listed
                 if not name in items:
                     self.tv.insert('', "end", name)
-                    #self.tv.insert(name, 'end', text=data["value"])  # fill tab
 
                 # set data
                 for col in self.tv["columns"]:
@@ -203,57 +262,70 @@ class Gui(object):
                     self.tv.set(name, col, s)
         except:
             log.exception("set_info: error. name: %s data: %s" % (name, data))
+        #log.debug("set_info: unlockNeeded?")
+        try:
+            if self.model.unlockNeeded:
+                self.model.unlock(guiParent=self.root)
+        except:
+            log.exception("set_info:unlock:")
 
         if not self.stopping:
             self.root.after(1000, func=self.set_info)
 
+    # remove callbacks alltogether?
     def _model_callback_poll_start(self):
         # careful, tkinter is not thread safe by default
-        self.labelModelUpdating["text"] = "working..."
+        #self.labelModelUpdating["text"] = "working..."
         #self.root.update_idletasks()
+        pass
     def _model_callback_poll_end(self):
         # careful, tkinter is not thread safe by default
-        self.labelModelUpdating["text"] = "waiting"
+        #self.labelModelUpdating["text"] = "waiting"
         #self.root.update_idletasks()
+        pass
 
     def renew(self):
         name = self.get_selection()
-        if tkMessageBox.askokcancel("renew", 'About to renew name "' + name + '". Proceed?'):
-            r = self.model.name_renew(name)
+        if tkMessageBox.askokcancel("renew", 'About to renew name "' + name + '". Proceed?'):            
+            r = self.model.name_renew(name, guiParent=self.root)
             tkMessageBox.showinfo(title="renew: name_update", message=r)
 
-    def name_new(self, trash=None):
+    def register_name(self, trash=None):
         name = self.newEntry.get()
         if name in self.model.names:
-            tkMessageBox.showerror(title="name_new", message=
+            tkMessageBox.showerror(title="Register Name Error", message=
                                    'pending operations on name "%s"' % name)
             return
-        value = namedialog.NameNewDialog(self.root, name).value
-        if value == None:  # cancelled
+        if self.model.check_name_exists(name):
+            tkMessageBox.showerror(title="Register Name Error", message=
+                                   'name "%s" is already registered' % name)
             return
-        r = self.model.name_new(name, value)
-        tkMessageBox.showinfo(title="name_new", message=r)
+        namedialog.NameNewDialog(self.model, self.root, name)
 
     def configure(self):
         name = self.get_selection()
-        value = namedialog.NameConfigureDialog(self.root, name).value
-        if value == None:  # cancelled
-            return
-        r = self.model.name_configure(name, value)
-        tkMessageBox.showinfo(title="configure: name_update", message=r)
+        namedialog.NameConfigureDialog(self.model, self.root, name)
 
     def transfer(self):
         name = self.get_selection()
-        result = namedialog.NameTransferDialog(self.root, name,
-                                               self.validate_address).result
-        if result == None:  # cancelled
-            return
-        value, targetAddress = result  # unpack tuple
-        r = self.model.name_transfer(name, value, targetAddress)
-        tkMessageBox.showinfo(title="transfer: name_update", message=r)
+        namedialog.NameTransferDialog(self.model, self.root, name,
+                                      self.validate_address)
 
     def validate_address(self, address):
         return self.model.validate_address(address)
 
+
+def run():
+    try:
+        global gui  # for easy console access
+        gui = Gui()
+    except:
+        log.exception("Launch error:")
+        root = tk.Tk()
+        tk.Label(root, justify="left", text=traceback.format_exc()).pack()
+        tk.Button(root, text="OK", command=root.quit).pack()
+        root.focus_force()
+        root.mainloop()    
+
 if __name__ == "__main__":
-    gui = Gui()
+    run()

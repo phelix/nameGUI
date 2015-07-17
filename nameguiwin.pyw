@@ -1,2 +1,2 @@
 import namegui
-gui = namegui.Gui()
+namegui.run()

@@ -9,6 +9,9 @@ from tkSimpleDialog import *
 
 from ttk import *
 
+from tkentryplus import EntryPlus as Entry
+from tktreeviewplus import TreeviewPlus as Treeview
+
 # monkey patch to make grid more comfortable
 def grd(self, *args, **kwargs):
     """grid shortcut that returns self"""
@@ -26,6 +29,7 @@ def pk(self, *args, **kwargs):
 Widget.pk = pk
 
 if __name__ == "__main__":
+    import tkMessageBox
     def messagebox():
         tkMessageBox.showerror("test", "message")
     root = Tk()
