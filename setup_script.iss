@@ -6,8 +6,8 @@
 
 [Messages]
 WelcomeLabel2=%nThis will install [name/ver] on your computer.%n
-ConfirmUninstall=Are you sure you want to remove %1 and undo any registry changes?%n%nThis will leave database files alone.
-UninstalledAll=%1 was successfully removed from your computer.%n%nThere might still be configuration data in %APPDATA%\nameGUI
+ConfirmUninstall=Are you sure you want to remove %1?%n%nThis will leave logs and name_new database files alone.
+UninstalledAll=%1 was successfully removed from your computer.%n%nThere might still be logs and data in %APPDATA%\nameGUI
 
 [Setup]
 AppVerName={#progname} {#version}
