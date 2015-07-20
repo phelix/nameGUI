@@ -1,5 +1,8 @@
+/build
+/dist
 /trash
 *.pyc
 *.png
 *.txt
 *.svg
+*.spec
