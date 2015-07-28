@@ -22,8 +22,11 @@ import traceback
 
 import mylogging
 import shared
+import util
 
 import json
+
+util.ensure_dirs(shared.CONFFOLDER)
 
 log = mylogging.getMyLogger(name="gui", levelConsole=shared.LOGLEVELCONSOLE,
                             filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)

@@ -28,6 +28,7 @@ x * get proper conf folder for logfile and namenewdb
 
 canDo
 =====
+* offer to create .conf file if missing
 * right click menu for treeview table
 * improve display of lookup data
 * make lookup data clickable (e.g. email)
