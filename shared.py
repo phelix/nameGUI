@@ -1,10 +1,13 @@
+import conf
 import sys
 sys.path.append("lib")
 import platformdep
 import logging
 
+args = conf.get_args()  # configuration dictionary
+
 appName = "nameGUI"
-CONFFOLDER = platformdep.get_conf_dir(appName.lower())
+CONFFOLDER = args.datadir if args.datadir else platformdep.get_conf_dir(appName.lower())
 
 LOGFILENAME = "logfile.txt"
 LOGFILENAMEPATH = CONFFOLDER + "/" + LOGFILENAME

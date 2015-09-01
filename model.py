@@ -116,9 +116,10 @@ class Model(object):
         self.log = mylogging.getMyLogger(name="model", levelConsole=shared.LOGLEVELCONSOLE,
                                          filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
 
+        datadir = shared.args.namecoindatadir
         # rpc does currently not work asynchronously
-        self._rpc = namerpc.CoinRpc(connectionType="client")  # poll
-        self.rpc = namerpc.CoinRpc(connectionType="client")  # other functions
+        self._rpc = namerpc.CoinRpc(connectionType="client", datadir=datadir)  # poll
+        self.rpc = namerpc.CoinRpc(connectionType="client", datadir=datadir)  # other functions
 
         self._doStop = False
         self._updateNow = False
