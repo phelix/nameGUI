@@ -14,6 +14,7 @@ POLLWAITSECONDS = 0.1
 NAMENEWMATURATIONBLOCKS = 12
 UNLOCKTIME = 21
 WAITFORBLOCKCHAIN = True
+LISTNAMEUPDATE = "update: "
 
 class NameDoesNotExistError(Exception):
     pass
@@ -38,7 +39,8 @@ nameTemplate = {
         "expired" : None,
         "new" : None,  # only name_new done
         "transferred" : None,
-        "queuedFirstUpdate" : None
+        "queuedFirstUpdate" : None,
+        "update" : None,  # name_update pending
     }
 
 ##comfortmodel
@@ -55,7 +57,7 @@ nameTemplate = {
 ##        self.log = log
 ##        if self.log == None:
 ##            self.log = mylogging.getMyLogger(name="unlock", levelConsole=shared.LOGLEVELCONSOLE,
-##                                 filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)        
+##                                 filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
 ##        self.method = method  # method to be thrown at the model when this class is called
 ##        self.unlocked = False
 ##        self.passphrase = None
@@ -88,7 +90,7 @@ nameTemplate = {
 ##            self.model.lock()
 
 class Model(object):
-    def __init__(self):        
+    def __init__(self):
         self.names = {}
         self.connected = False
         self.blockchainUptodate = False
@@ -99,6 +101,7 @@ class Model(object):
         self.firstUpdateQueue = []
         self.updateCount = 0
         self.blockHashPrev = None
+        self.listSinceBlockPrev = None
         self.isLocked = None
 
         self.passphrase = None
@@ -146,19 +149,22 @@ class Model(object):
                     self.isLocked = False if i["unlocked_until"] else True
                 else:
                     self.isLocked = False
-                    
+
                 self.blockCount = i["blocks"]
                 self.balance = i["balance"]
                 self.blockchainUptodate = self._rpc.blockchain_is_uptodate()
                 if (not self._initialUpdate and i["connections"] and
                     WAITFORBLOCKCHAIN and not self.blockchainUptodate):
-                    self.log.debug("waiting for blockchain, ", self._rpc.call("getblockcount"))
+                    self.log.debug("waiting for blockchain, ", self.blockCount)
                 else:
                     hPrev = None
                     blockHash = self._rpc.call("getblockhash", [self.blockCount])
-                    if self._updateNow or blockHash != self.blockHashPrev:
+                    self.listSinceBlock = self._rpc.call("listsinceblock", [blockHash])
+                    if (self._updateNow or blockHash != self.blockHashPrev or
+                        self.listSinceBlock != self.listSinceBlockPrev):
                         self._update()
                     self.blockHashPrev = blockHash
+                    self.listSinceBlockPrev = self.listSinceBlock
                 self.connected = True
             except:
                 self.log.exception("poll failed:")
@@ -206,9 +212,9 @@ class Model(object):
             n["new"] = False
             n["known"] = True
             nameListDic[r["name"]] = n
-        nameNewDic = {}
 
         # previous name_new
+        nameNewDic = {}
         for name in self.nameNewDb:
             if not name in nameListDic:
                 n = nameTemplate.copy()  # shallow
@@ -224,14 +230,26 @@ class Model(object):
                         self.firstUpdateQueue.append(name)
                 except namerpc.InvalidAddressOrKeyError:
                     n["known"] = False
-                nameListDic[name] = n
+                nameNewDic[name] = n
+
+        # pending name_updates
+        nameUpdateDic = {}
+        for t in self.listSinceBlock["transactions"]:
+            if "name" in t and t["name"].startswith(LISTNAMEUPDATE):  # secure?
+                name = t["name"].replace(LISTNAMEUPDATE, "")
+                n = nameTemplate.copy()
+                n["update"] = True
+                nameUpdateDic[name] = n
 
         # merge
+        for name in nameUpdateDic:
+            self.log.debug("nameUpdateDic:", name)
         for name in nameNewDic:
-            self.log.debug(name, nameNewDic[name]["new"], "confirmations:", nameNewDic[n]["confirmations"])
+            self.log.debug("nameNewDic:", name, nameNewDic[name]["new"], "confirmations:", nameNewDic[name]["confirmations"])
         self.names = {}
         self.names.update(nameListDic)
         self.names.update(nameNewDic)
+        self.names.update(nameUpdateDic)
 
         # in firstupdate queue?
         for name in self.names:
@@ -271,7 +289,7 @@ class Model(object):
         except namerpc.WalletError:
             raise NameDoesNotExistError
         assert data["name"] == name
-        return data        
+        return data
 
     def name_show(self, name):
         try:
@@ -279,7 +297,7 @@ class Model(object):
         except namerpc.WalletError:
             raise NameDoesNotExistError
         assert data["name"] == name
-        return data        
+        return data
 
     def get_data(self, name):
         """comfort function for a single name name_list"""
@@ -373,7 +391,7 @@ class Model(object):
             self.log.debug("call: unlock necessary")
             self.unlock(rpc, guiParent=guiParent)
             return rpc.call(method, args)
-            
+
     def unlock(self, rpc=None, passphrase=None, guiParent=None):
         if rpc == None:
             rpc = self.rpc
@@ -401,7 +419,7 @@ class Model(object):
             self.log.info("unlock: wrong passphrase")
             raise
     def lock(self):
-        self.rpc.call("walletlock")  # throws no error if client already locked            
+        self.rpc.call("walletlock")  # throws no error if client already locked
 
     def get_passphrase(self, guiParent=None):
         self.log.info("get_passphrase: this function is a hook to be replaced. " +

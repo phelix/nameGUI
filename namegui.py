@@ -68,7 +68,7 @@ class Gui(object):
         nameNewButton = tk.Button(self.root, text="register", command=self.register_name
                                   ).grd(row=30, column=30)
         tk.Button(self.root, text="copy value", command=lambda: self.copy_field_external("value")
-                  ).grd(row=30, column=40)        
+                  ).grd(row=30, column=40)
         tk.Button(self.root, text="copy address", command=lambda: self.copy_field_external("address")
                   ).grd(row=30, column=50)
 
@@ -112,7 +112,7 @@ class Gui(object):
         tk.Button(self.root, text="copy value", command=lambda: self.copy_field("value")
                   ).grd(row=50, column=50)
         tk.Button(self.root, text="copy address", command=lambda: self.copy_field("address")
-                  ).grd(row=50, column=60)        
+                  ).grd(row=50, column=60)
 
         # set up model
         self.model = namedialog.MyModel()
@@ -149,13 +149,13 @@ class Gui(object):
         if f == "name":
             self.set_clipboard(name)
         else:
-            self.set_clipboard(self.model.names[name][f])        
+            self.set_clipboard(self.model.names[name][f])
 
     def event_key_release_register(self, *trash):
         name = self.newEntry.get()
         if name == "":
             self.displayValueLabel["text"] = ""
-            self.displayNameDataLabel["text"] = ""            
+            self.displayNameDataLabel["text"] = ""
             return
         try:
             r = self.model.name_show(name)
@@ -166,7 +166,7 @@ class Gui(object):
 
         v = str(r["value"])
         if len(v) > 100:
-            v = v[:130] + "..."        
+            v = v[:130] + "..."
         self.displayValueLabel["text"] = v
 
         r.pop("value")  # in place operation
@@ -244,10 +244,12 @@ class Gui(object):
                         elif col == "status":
                             # todo: several separate status fields
                             s = ""
-                            if not data["known"]:
+                            if not data["known"] and not data["update"]:
                                 s += "unknown "
                             if data["new"]:
-                                s += "pending " + "(" + str(data["confirmations"]) + ") "
+                                s += "pending_new" + "(" + str(data["confirmations"]) + ") "
+                            if data["update"]:
+                                s += "pending_update"
                             if data["transferred"]:
                                 s += "transferred "  # todo: to address
                             if data["expired"]:
@@ -289,7 +291,7 @@ class Gui(object):
 
     def renew(self):
         name = self.get_selection()
-        if tkMessageBox.askokcancel("renew", 'About to renew name "' + name + '". Proceed?'):            
+        if tkMessageBox.askokcancel("renew", 'About to renew name "' + name + '". Proceed?'):
             r = self.model.name_renew(name, guiParent=self.root)
             tkMessageBox.showinfo(title="renew: name_update", message=r)
 
@@ -328,7 +330,7 @@ def run():
         tk.Label(root, justify="left", text=traceback.format_exc()).pack()
         tk.Button(root, text="OK", command=root.quit).pack()
         root.focus_force()
-        root.mainloop()    
+        root.mainloop()
 
 if __name__ == "__main__":
     run()
