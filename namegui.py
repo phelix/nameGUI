@@ -155,15 +155,25 @@ class Gui(object):
 
     def event_key_release_register(self, *trash):
         name = self.newEntry.get()
+        self.display_name_data(name)
+
+    def display_name_data(self, name):
+        self.displayNameDataLabel["text"] = ""
+
         if name == "":
             self.displayValueLabel["text"] = ""
-            self.displayNameDataLabel["text"] = ""
             return
+
         try:
             r = self.model.name_show(name)
         except model.NameDoesNotExistError:
             self.displayValueLabel["text"] = "<available for registration>"
-            self.displayNameDataLabel["text"] = ""
+            return
+        except model.ClientError as e:
+            self.displayValueLabel["text"] = "<lookup failure: client error: %s>" % repr(e)
+            return
+        except (model.RpcError, model.RpcConnectionError) as e:
+            self.displayValueLabel["text"] = "<lookup failure: error: %s>" % repr(e)
             return
 
         v = str(r["value"])
