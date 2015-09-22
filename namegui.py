@@ -192,9 +192,12 @@ class Gui(object):
     def show_error(self, exc_type, exc_value, exc_traceback):
         if exc_type == SelectionEmptyError:
             return
-        err = traceback.format_exception(exc_type, exc_value, exc_traceback)
         log.exception("Error in GUI loop:")
-        tkMessageBox.showerror('Exception', err)
+        message = repr(exc_value) + "\n\nOops. Would you like to see details?"
+        if tkMessageBox.askyesno(title='Exception',  message=message,
+                                               icon=tkMessageBox.ERROR, type=tkMessageBox.YESNO):
+            err = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            tkMessageBox.showerror(title='Exception Details', message=err)
 
     def shutdown(self):
         log.info("shutdown")
