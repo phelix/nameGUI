@@ -42,6 +42,10 @@ class Gui(object):
         self.root = tk.Tk()
         self.root.withdraw()  # hide for now in case an error comes up so the error window is visible
 
+        # keyboard shortcuts
+        self.root.bind("<Control-r>", self.renew)
+        self.root.bind("<Control-c>", self.configure)
+
         # client info
         tk.Label(self.root, justify="left", text="Connected:").grd(row=10, column=10)
         self.labelConnected = tk.Label(self.root, justify="left", text="...").grd(row=10, column=20)
@@ -102,9 +106,9 @@ class Gui(object):
         self.root.bind("<Button-5>", self.on_scroll_event) # Linux B
 
         # name buttons
-        tk.Button(self.root, text="renew", command=self.renew
+        tk.Button(self.root, text="renew", command=self.renew, underline=0,
                   ).grd(row=50, column=10)
-        tk.Button(self.root, text="configure value", command=self.configure
+        tk.Button(self.root, text="configure value", command=self.configure, underline=0,
                   ).grd(row=50, column=20)
         tk.Button(self.root, text="transfer name", command=self.transfer
                   ).grd(row=50, column=30)
@@ -291,13 +295,13 @@ class Gui(object):
         #self.root.update_idletasks()
         pass
 
-    def renew(self):
+    def renew(self, *trash):
         name = self.get_selection()
         if tkMessageBox.askokcancel("renew", 'About to renew name "' + name + '". Proceed?'):
             r = self.model.name_renew(name, guiParent=self.root)
             tkMessageBox.showinfo(title="renew: name_update", message=r)
 
-    def register_name(self, trash=None):
+    def register_name(self, *trash):
         name = self.newEntry.get()
         if name in self.model.names:
             tkMessageBox.showerror(title="Register Name Error", message=
@@ -309,7 +313,7 @@ class Gui(object):
             return
         namedialog.NameNewDialog(self.model, self.root, name)
 
-    def configure(self):
+    def configure(self, *trash):
         name = self.get_selection()
         namedialog.NameConfigureDialog(self.model, self.root, name)
 
