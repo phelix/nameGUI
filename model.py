@@ -8,21 +8,6 @@ import mylogging
 import shared
 import util
 
-VALIDCHARS = "abcdefghijklmnopqrstuvwxyz1234567890-/"
-POLLSECONDS = 3
-POLLWAITSECONDS = 0.1
-NAMENEWMATURATIONBLOCKS = 12
-UNLOCKTIME = 21
-WAITFORBLOCKCHAIN = True
-LISTNAMEUPDATE = "update: "
-
-class NameDoesNotExistError(Exception):
-    pass
-class NameDoesAlreadyExistError(Exception):
-    pass
-class WalletUnlockCancelledError(Exception):
-    pass
-
 import time
 import sys
 sys.path.append("../namerpc")
@@ -30,6 +15,26 @@ import namerpc
 
 import time
 import threading
+
+# errors from namerpc for fine grained user info
+NameDoesNotExistError = namerpc.NameDoesNotExistError
+RpcError = namerpc.RpcError
+RpcConnectionError = namerpc.RpcConnectionError
+ClientError = namerpc.ClientError
+clientErrorClasses = namerpc.clientErrorClasses
+
+class NameDoesAlreadyExistError(Exception):
+    pass
+class WalletUnlockCancelledError(Exception):
+    pass
+
+VALIDCHARS = "abcdefghijklmnopqrstuvwxyz1234567890-/"
+POLLSECONDS = 3
+POLLWAITSECONDS = 0.1
+NAMENEWMATURATIONBLOCKS = 12
+UNLOCKTIME = 21
+WAITFORBLOCKCHAIN = True
+LISTNAMEUPDATE = "update: "
 
 nameTemplate = {
         "txid" : None,

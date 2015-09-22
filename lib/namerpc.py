@@ -63,9 +63,9 @@ class RpcConnectionError(Exception):
 class NameDoesNotExistError(Exception):
     pass
 
-# create Exception classes for client errors from codes
+# create Exception classes for client errors from error codes
 # with results like this:
-# class InvalidAddressError(Exception):
+# class InvalidAddressError(ClientError):
 #    code = -4
 ##    // General application defined errors
 ##    RPC_MISC_ERROR                  = -1,  // std::exception thrown in command handling
@@ -106,11 +106,16 @@ clientErrorCodes = {
     "WalletAlreadyUnlockedError" : -17,
     }
 
+class ClientError(Exception):
+    """Base class for client errors."""
+    pass
+
 clientErrorClasses = []
 for e in clientErrorCodes:
-    c = type(e, (Exception,), {"code":clientErrorCodes[e]})  # create class
+    c = type(e, (ClientError,), {"code":clientErrorCodes[e]})  # create class
     globals()[c.__name__] = c  # register in module
     clientErrorClasses.append(c)  # allow for easy access
+
 
 class CoinRpc(object):
     """connectionType: auto, nmcontrol or client"""
