@@ -403,27 +403,31 @@ class Model(object):
             rpc = self.rpc
         if passphrase == None:
             passphrase = self.passphrase
-        if passphrase == None and guiParent:
-            self.log.info("unlock: about to get_passphrase...")
-            passphrase = self.get_passphrase(guiParent)
-        if not passphrase or not type(passphrase) in [str, unicode]:
-            self.log.info("unlocking wallet... cancelled - no valid passphrase")
-            raise WalletUnlockCancelledError
-        try:
-            self.log.info("unlocking wallet...")
-            self.unlocked = True
-            rpc.call("walletpassphrase", [passphrase, UNLOCKTIME])
-            self.log.debug("unlock: passphrase is correct")
-            self.passphrase = passphrase
-            self.unlockNeeded = False
-        except namerpc.WalletAlreadyUnlockedError:
-            self.log.debug("unlock: wallet already unlocked")
-            self.unlocked = False
-        except namerpc.WalletPassphraseIncorrectError:
-            self.passphrase = None
-            self.unlocked = False
-            self.log.info("unlock: wrong passphrase")
-            raise
+        while 1:
+            if passphrase == None and guiParent:
+                self.log.info("unlock: about to get_passphrase...")
+                passphrase = self.get_passphrase(guiParent)
+            if not passphrase or not type(passphrase) in [str, unicode]:
+                self.log.info("unlocking wallet... cancelled - no valid passphrase")
+                raise WalletUnlockCancelledError
+            try:
+                self.log.info("unlocking wallet...")
+                self.unlocked = True
+                rpc.call("walletpassphrase", [passphrase, UNLOCKTIME])
+                self.log.debug("unlock: passphrase is correct")
+                self.passphrase = passphrase
+                self.unlockNeeded = False
+            except namerpc.WalletAlreadyUnlockedError:
+                self.log.debug("unlock: wallet already unlocked")
+                self.unlocked = False
+            except namerpc.WalletPassphraseIncorrectError:
+                passphrase = None
+                self.passphrase = None
+                self.unlocked = False
+                self.log.info("unlock: wrong passphrase")
+                continue
+            break
+
     def lock(self):
         self.rpc.call("walletlock")  # throws no error if client already locked
 

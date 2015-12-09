@@ -7,11 +7,13 @@ remove code/text widget alltogether?
 """
 
 import sys
+sys.path.append("..")
 sys.path.append("../lib")
 
 import ttkinter as tk
 import tkMessageBox
 
+import namedialog
 import tkentryplus
 
 
@@ -27,39 +29,18 @@ for s in ["Toplevel", "Button", "Label"]:
 
 import json
 
-
-class NameDialog(tkSimpleDialog.Dialog):
-    dialogTitle = "NameDialog"
-    def __init__(self, model, parent, name):
-        self.model = model
-        self.parent = parent
-        self.name = name
-        tkSimpleDialog.Dialog.__init__(self, parent, title=self.dialogTitle)
-    def body(self, master):
-        frame = tk.Frame(master)
-        l = tk.Label(frame, justify="left", text="Name:").grd(row=10, column=10)
-        return l
-    def buttonbox(self):
-        '''override standard button box.'''
-        #box = Frame(self)
-        self.bind("<Escape>", self.cancel)
-        tk.Button(self, text="done", command=self.cancel).pk()
-    def validate(self):
-        """hook"""
-        return 1
-    def apply(self):
-        '''This method is called automatically to process the data,
-        *after* the dialog is destroyed.'''
-        self.value = self.valueEntry.get()
-
-class TradeDialog(NameDialog):
+class TradeDialog(namedialog.NameDialog):
     def callback_unlock(self):
         pass
     def __init__(self, model, parent, name=None):
-        self.apc = antpycore.AntpyCore(model.rpc, self.callback_unlock)
-        NameDialog.__init__(self, model, parent, name)
-
-
+        self.model = model
+        self.apc = antpycore.AntpyCore(self.rpc_call)
+        namedialog.NameDialog.__init__(self, model, parent, name)
+    def apply(self):
+        pass
+    def rpc_call(self, *args, **kwargs):
+        kwargs["guiParent"] = self
+        return self.model.call(*args, **kwargs)
 class CreateOfferDialog(TradeDialog):
     dialogTitle = "Create Offer"
     def body(self, master):
@@ -170,16 +151,14 @@ if __name__ == "__main__":
 
     import namerpc
 
-    #model = namedialog.MyModel(root)  # unlocks automatically (passphrase dialog)
-    class model(object):
-        rpc = namerpc.CoinRpc(connectionType="client")
-    
+    myModel = namedialog.MyModel()
+
     root.protocol("WM_DELETE_WINDOW", shutdown)
 
     def create():
-        CreateOfferDialog(model, root, "id/keynes")
+        CreateOfferDialog(myModel, root, "id/keynes")
     def accept():
-        AcceptOfferDialog(model, root)
+        AcceptOfferDialog(myModel, root)
 
     tk.Button(text="create offer", command=create).pack()
     tk.Button(text="accept offer", command=accept).pack()

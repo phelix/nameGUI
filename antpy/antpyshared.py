@@ -4,6 +4,9 @@
 # address reuse is evil
 # clipboard stuffing / monitoring
 
+import sys
+sys.path.append("../lib")
+
 import namerpc
 import decimal
 
@@ -49,28 +52,28 @@ def get_name(vouts):
         raise IndexError()
     return names[0]
 
-def sum_inputs(tx, rpc):
+def sum_inputs(tx, rpc_call):
     missing = []
     sumInputs = decimal.Decimal(0)
     for vin in tx["vin"]:
         try:
-            pTx = rpc.call("getrawtransaction", [vin["txid"], 1])
+            pTx = rpc_call("getrawtransaction", [vin["txid"], 1])
             sumInputs += pTx["vout"][vin["vout"]]["value"]            
         except namerpc.InvalidAddressOrKeyError:
             missing.append(vin["txid"])
     return sumInputs, missing
 
-def sum_outputs(tx, rpc):
+def sum_outputs(tx):
     sumOutputs = decimal.Decimal(0)
     for vout in tx["vout"]:
         sumOutputs += vout["value"]
     return sumOutputs
 
-def calc_fee(tx, rpc):
-    sumInputs, missingInputs = sum_inputs(tx, rpc)
-    return (sumInputs - sum_outputs(tx, rpc)), missingInputs
+def calc_fee(tx, rpc_call):
+    sumInputs, missingInputs = sum_inputs(tx, rpc_call)
+    return (sumInputs - sum_outputs(tx), missingInputs)
 
-def analyze_tx(tx, rpc, seller=True):
+def analyze_tx(tx, rpc_call, seller=True):
     D = {"warning":""}
     try:
         D["name"] = get_name(tx["vout"])
@@ -78,11 +81,11 @@ def analyze_tx(tx, rpc, seller=True):
         raise Exception("Multiple names in offer. Currently not supported.")
 
     if seller:
-        nameData = rpc.call("name_list", [D["name"]])
+        nameData = rpc_call("name_list", [D["name"]])
         if nameData == []:
             raise Exception("Name not in wallet: " + str(D["name"]))
 
-    nameData = rpc.call("name_show", [D["name"]])
+    nameData = rpc_call("name_show", [D["name"]])
     if nameData == []:
         raise Exception("Name is not currently registered.")
     sellerAddress = nameData["address"]
@@ -90,7 +93,7 @@ def analyze_tx(tx, rpc, seller=True):
 
     # make sure the seller is not tricked into transfering NMC from name address
     if seller:
-        nameBalance = rpc.call("getreceivedbyaddress", [nameData["address"], 0])
+        nameBalance = rpc_call("getreceivedbyaddress", [nameData["address"], 0])
         if (type(nameBalance) != decimal.Decimal):
             raise Exception("Balance on name address unkown.")
         if nameBalance != decimal.Decimal(0):
@@ -98,7 +101,7 @@ def analyze_tx(tx, rpc, seller=True):
                             "the name. Currently not supported. The offer creator " +
                             "may not be able to see this.")
     
-    fee, missingInputs = calc_fee(tx, rpc)
+    fee, missingInputs = calc_fee(tx, rpc_call)
     if not missingInputs or (len(missingInputs) == 1 and nameTxid in missingInputs):
         # no balance on name input (checked by seller)
         if fee < 0:
@@ -137,4 +140,4 @@ if __name__ == "__main__":
     txid = rpc.call("name_show", ["d/nx"])["txid"]
     tx = rpc.call("getrawtransaction", [txid, 1])
 
-    analyze_tx(tx, rpc, seller=False)
+    analyze_tx(tx, rpc.call, seller=False)

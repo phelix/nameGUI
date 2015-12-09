@@ -349,7 +349,6 @@ class Gui(object):
     def accept_offer(self):
         antpy.AcceptOfferDialog(self.model, self.root)
 
-
     def validate_address(self, address):
         return self.model.validate_address(address)
 
