@@ -2,9 +2,11 @@ import shared  # needs to be imported early because of configuration and cli par
 
 import sys
 sys.path.append("lib")
+sys.path.append("antpy")
 
 import splashscreen
 import os
+
 
 favicon = None
 #favicon = "gfx/favicon.gif"  # somebody try this on linux / mac
@@ -18,6 +20,7 @@ import tkMessageBox
 import namedialog
 
 import model
+import antpy
 
 import time
 import traceback
@@ -73,6 +76,7 @@ class Gui(object):
         self.newEntry.bind("<Escape>", lambda trash: self.newEntry.set(""))
         nameNewButton = tk.Button(self.root, text="register", command=self.register_name
                                   ).grd(row=30, column=30)
+        tk.Button(text="create offer", command=self.create_offer).grd(row=30, column=35)
         tk.Button(self.root, text="copy value", command=lambda: self.copy_field_external("value")
                   ).grd(row=30, column=40)
         tk.Button(self.root, text="copy address", command=lambda: self.copy_field_external("address")
@@ -112,6 +116,8 @@ class Gui(object):
                   ).grd(row=50, column=20)
         tk.Button(self.root, text="transfer name", command=self.transfer
                   ).grd(row=50, column=30)
+        tk.Button(self.root, text="accept offer", command=self.accept_offer
+                  ).grd(row=50, column=35)
 
         tk.Button(self.root, text="copy name", command=lambda: self.copy_field("name")
                   ).grd(row=50, column=40)
@@ -334,6 +340,15 @@ class Gui(object):
         name = self.get_selection()
         namedialog.NameTransferDialog(self.model, self.root, name,
                                       self.validate_address)
+
+    def create_offer(self):
+        name = self.newEntry.get()
+        print "name:'%s" % name
+        antpy.CreateOfferDialog(self.model, self.root, name)
+
+    def accept_offer(self):
+        antpy.AcceptOfferDialog(self.model, self.root)
+
 
     def validate_address(self, address):
         return self.model.validate_address(address)
