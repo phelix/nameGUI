@@ -41,6 +41,22 @@ class NameDialog(tkSimpleDialog.Dialog):
         self.parent = parent
         self.name = name
         tkSimpleDialog.Dialog.__init__(self, parent, title=self.dialogTitle)
+    def body(self, master):
+        frame = tk.Frame(master)
+        l = tk.Label(frame, justify="left", text="Name:").grd(row=10, column=10)
+        return l
+##    def buttonbox(self):
+##        '''override standard button box.'''
+##        pass
+    def validate(self):
+        """hook"""
+        return 1
+    def apply(self):
+        '''This method is called automatically to process the data,
+        *after* the dialog is destroyed.'''
+        self.value = self.valueEntry.get()
+
+class NameConfigDialog(NameDialog):
     def config(self, master):
         frame = tk.Frame(master)
         tk.Label(frame, justify="left", text="Name:").grd(row=10, column=10)
@@ -83,20 +99,7 @@ class NameDialog(tkSimpleDialog.Dialog):
         self.config(master).grd(row=10, column=10, columnspan=100)
         return self.focus  # set by config
 
-##    def buttonbox(self):
-##        '''override standard button box.'''
-##        pass
-
-    def validate(self):
-        """hook"""
-        return 1
-
-    def apply(self):
-        '''This method is called automatically to process the data,
-        *after* the dialog is destroyed.'''
-        self.value = self.valueEntry.get()
-
-class NameNewDialog(NameDialog):
+class NameNewDialog(NameConfigDialog):
     dialogTitle = "New Name"
     def body(self, master):
         tk.Label(master, justify="left", text="About to register:").grd()
@@ -111,7 +114,7 @@ class NameNewDialog(NameDialog):
         r = self.model.name_new(self.name, value, guiParent=self.parent)
         tkMessageBox.showinfo(title="name_new response", message=r)
 
-class NameConfigureDialog(NameDialog):
+class NameConfigureDialog(NameConfigDialog):
     windowTitle = "Configure Name"
     def apply(self):
         value = self.valueEntry.get()
@@ -119,12 +122,12 @@ class NameConfigureDialog(NameDialog):
         r = self.model.name_configure(self.name, value, guiParent=self.parent)
         tkMessageBox.showinfo(title="name_update response", message=r)
 
-class NameTransferDialog(NameDialog):
+class NameTransferDialog(NameConfigDialog):
     windowTitle = "Transfer Name"
     def __init__(self, model, parent, name, validate_address_callback):
         self.targetAddress = None
         self.validate_address_callback = validate_address_callback
-        NameDialog.__init__(self, model, parent, name)
+        NameConfigDialog.__init__(self, model, parent, name)
     def body(self, master):
         tk.Label(master, justify="left", text="About to TRANSFER:").grd()
         self.config(master).grd(columnspan=100)
