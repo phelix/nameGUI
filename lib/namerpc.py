@@ -42,7 +42,7 @@ import locale
 encoding = locale.getpreferredencoding().lower()
 
 COINAPP = "namecoin"
-DEFAULTCLIENTPORT =  8332
+DEFAULTCLIENTPORT =  8336
 DEFAULTNMCONTROLPORT =  9000
 HOST = "127.0.0.1"
 
@@ -258,6 +258,8 @@ class CoinRpc(object):
                     parts = line.split ("=")
                     if len(parts) == 2:
                         key = parts[0].strip()
+                        if key.startswith("#"):
+                            continue
                         val = parts[1].strip()
                         options[key] = val
         except IOError as e:
@@ -326,6 +328,7 @@ if __name__ == "__main__":
 
         print "\n\n========Namecoind"
         rpc = CoinRpc(connectionType=CONTYPECLIENT)
+        print "options:", rpc.options
         print rpc.call("getinfo")
         print rpc.nm_show("d/nx")
 
