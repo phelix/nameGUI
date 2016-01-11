@@ -4,6 +4,8 @@ sys.path.append("lib")
 import platformdep
 import mylogging
 
+VERSION = "0.3"  # also in setup_script.iss
+
 args = conf.get_args()  # configuration dictionary
 
 appName = "nameGUI"

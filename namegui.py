@@ -136,7 +136,7 @@ class Gui(object):
 
         # set up window
         self.root.report_callback_exception = self.show_error
-        self.root.title("nameGUI - Namecoin RPC Frontend")
+        self.root.title("nameGUI - Namecoin RPC Frontend - v" + shared.VERSION)
         self.root.wm_iconbitmap(bitmap=favicon, default=favicon)
         self.root.protocol("WM_DELETE_WINDOW", self.shutdown)
         self.root.focus_force()
