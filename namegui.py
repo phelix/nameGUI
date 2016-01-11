@@ -33,8 +33,7 @@ import json
 
 util.ensure_dirs(shared.CONFFOLDER)
 
-log = mylogging.getMyLogger(name="gui", levelConsole=shared.LOGLEVELCONSOLE,
-                            filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
+log = shared.get_my_logger(name=__file__)
 
 class SelectionEmptyError(Exception):
     pass

@@ -118,8 +118,7 @@ class Model(object):
         util.ensure_dirs(shared.CONFFOLDER)
         self.nameNewDb = lineperdic.LPD(shared.NAMENEWDBFILENAMEPATH)
 
-        self.log = mylogging.getMyLogger(name="model", levelConsole=shared.LOGLEVELCONSOLE,
-                                         filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
+        self.log = shared.get_my_logger(name=__file__)
 
         datadir = shared.args.namecoindatadir
         # rpc does currently not work asynchronously

@@ -27,7 +27,7 @@ def _logMy(self, level, msg, args, **kwargs):
     _logOriginal(self, level, msg, args, **kwargs)
 Logger._log = _logMy  # instances should be updated, too
 
-def getMyLogger(name=None, levelConsole=INFO, filename=None, levelFile=DEBUG):
+def get_logger(name=None, levelConsole=INFO, filename=None, levelFile=DEBUG):
     # create formatter
     formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -47,6 +47,6 @@ def getMyLogger(name=None, levelConsole=INFO, filename=None, levelFile=DEBUG):
     return logger
 
 if __name__ == "__main__":
-    log = getMyLogger("test", levelConsole=DEBUG, filename="test.txt")
+    log = get_logger("test", levelConsole=DEBUG, filename="test.txt")
     log.info("test", 1)
     log.debug("teeeesüst2", u"teäst2b")

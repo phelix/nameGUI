@@ -2,7 +2,7 @@ import conf
 import sys
 sys.path.append("lib")
 import platformdep
-import logging
+import mylogging
 
 args = conf.get_args()  # configuration dictionary
 
@@ -11,8 +11,12 @@ CONFFOLDER = args.datadir if args.datadir else platformdep.get_conf_dir(appName.
 
 LOGFILENAME = "logfile.txt"
 LOGFILENAMEPATH = CONFFOLDER + "/" + LOGFILENAME
-LOGLEVELCONSOLE = logging.DEBUG
-LOGLEVELFILE = logging.DEBUG
+LOGLEVELCONSOLE = mylogging.DEBUG
+LOGLEVELFILE = mylogging.DEBUG
 
 NAMENEWDBFILENAME = "nameNewDb.txt"
 NAMENEWDBFILENAMEPATH = CONFFOLDER + "/" + NAMENEWDBFILENAME
+
+def get_my_logger(name):
+    return mylogging.get_logger(name=name, levelConsole=LOGLEVELCONSOLE,
+                                            filename=LOGFILENAMEPATH, levelFile=LOGLEVELFILE)
