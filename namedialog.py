@@ -1,5 +1,6 @@
 import sys
 sys.path.append("lib")
+sys.path.append('src')
 
 import ttkinter as tk
 import tkMessageBox
@@ -13,6 +14,7 @@ for s in ["Toplevel", "Button", "Label"]:
 import json
 
 import model
+import datainput
 
 class MyModel(model.Model):
     def get_passphrase(self, guiParent=None):
@@ -51,49 +53,60 @@ class NameDialog(tkSimpleDialog.Dialog):
     def validate(self):
         """hook"""
         return 1
+    def get(self):
+        pageNumber = self.notebook.index(self.notebook.select())
+        return json.dumps(self.namespaces[pageNumber].get_data())
     def apply(self):
         '''This method is called automatically to process the data,
         *after* the dialog is destroyed.'''
-        self.value = self.valueEntry.get()
+        pass
 
 class NameConfigDialog(NameDialog):
     def config(self, master):
         frame = tk.Frame(master)
-        tk.Label(frame, justify="left", text="Name:").grd(row=10, column=10)
-        tk.Label(frame, justify="left", text=self.name).grd(row=10, column=20)
+        tk.Label(frame, justify="left", text="Name: " + self.name).grd(row=10, column=10, pady=5)
 
+        # setup tabs
         self.notebook = tk.Notebook(frame)
-        self.page1 = tk.Frame(self.notebook); # first page
-        self.page2 = tk.Frame(self.notebook); # second page
-        self.notebook.add(self.page1, text='Custom Configuration')
-        self.notebook.add(self.page2, text='tbd')
+        self.namespaces = []
+        self.namespaces.append(datainput.NamespaceD(tk.Frame(self.notebook)))  # why not direct, without extra frame?
+        self.notebook.add(self.namespaces[-1].parent, text="d/domain")
+        self.namespaces.append(datainput.NamespaceId(tk.Frame(self.notebook)))
+        self.notebook.add(self.namespaces[-1].parent, text="id/identity")
+        self.namespaces.append(datainput.NamespaceCustom(tk.Frame(self.notebook)))
+        self.notebook.add(self.namespaces[-1].parent, text="Custom Configuration")
+
+        if self.name.startswith("id/"):
+            self.notebook.select(1)
+
         self.notebook.grd(column=10, columnspan=20)
 
-        tk.Label(self.page1, justify="left", text="Value:").grd(row=30, column=10)
-        self.valueEntry = tk.Entry(self.page1).grd(row=30, column=20)
-        tk.Label(self.page1, justify="left", text="Value:").grd(row=30, column=10)
+##        tk.Label(self.page1, justify="left", text="Value:").grd(row=30, column=10)
+##        self.valueEntry = tk.Entry(self.page1).grd(row=30, column=20)
+##        tk.Label(self.page1, justify="left", text="Value:").grd(row=30, column=10)
+##
+##        tk.Label(self.page1, justify="left", text="Valid JSON:").grd(row=40, column=10)
+##        self.validJsonLabel = tk.Label(self.page1, justify="left", text="...").grd(row=40, column=20)
+##
+##        self.valueEntry.bind("<FocusIn>", self.check_json)
+##        self.valueEntry.bind("<FocusOut>", self.check_json)
+##        self.valueEntry.bind("<KeyRelease>", self.check_json)
+##        self.valueEntry.bind("<<menu_modified>>", self.check_json)  # copy / paste
 
-        tk.Label(self.page1, justify="left", text="Valid JSON:").grd(row=40, column=10)
-        self.validJsonLabel = tk.Label(self.page1, justify="left", text="...").grd(row=40, column=20)
-
-        self.valueEntry.bind("<FocusIn>", self.check_json)
-        self.valueEntry.bind("<FocusOut>", self.check_json)
-        self.valueEntry.bind("<KeyRelease>", self.check_json)
-        self.valueEntry.bind("<<menu_modified>>", self.check_json)  # copy / paste
-
-        self.focus = self.valueEntry
+        #self.focus = self.valueEntry
+        self.focus = None  # initial focus
 
         return frame
 
-    def check_json(self, trash):
-        s = self.valueEntry.get()
-        try:
-            json.loads(s)
-            self.validJsonLabel["foreground"] = "black"
-            self.validJsonLabel["text"] = "ok"
-        except:
-            self.validJsonLabel["foreground"] = "red"
-            self.validJsonLabel["text"] = "fail"
+##    def check_json(self, trash):
+##        s = self.valueEntry.get()
+##        try:
+##            json.loads(s)
+##            self.validJsonLabel["foreground"] = "black"
+##            self.validJsonLabel["text"] = "ok"
+##        except:
+##            self.validJsonLabel["foreground"] = "red"
+##            self.validJsonLabel["text"] = "fail"
 
     def body(self, master):
         self.config(master).grd(row=10, column=10, columnspan=100)
@@ -110,14 +123,14 @@ class NameNewDialog(NameConfigDialog):
         "run for three hours to ensure the process can finish.").grd()
         return self.focus
     def apply(self):
-        value = self.valueEntry.get()
+        value = self.get()
         r = self.model.name_new(self.name, value, guiParent=self.parent)
         tkMessageBox.showinfo(title="name_new response", message=r)
 
 class NameConfigureDialog(NameConfigDialog):
     windowTitle = "Configure Name"
     def apply(self):
-        value = self.valueEntry.get()
+        value = self.get()
         # todo: check if value is the same as the current one?
         r = self.model.name_configure(self.name, value, guiParent=self.parent)
         tkMessageBox.showinfo(title="name_update response", message=r)
@@ -145,7 +158,7 @@ class NameTransferDialog(NameConfigDialog):
         return 1
 
     def apply(self):
-        value = self.valueEntry.get()
+        value = self.get()
         targetAddress = self.targetAddressEntry.get()
 
         r = self.model.name_transfer(self.name, value=value,
