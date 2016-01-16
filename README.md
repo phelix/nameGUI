@@ -17,7 +17,7 @@ Install Dependencies
 
 toDo
 ====
-* Namecoin Core not shutting down until nameGUI is closed
+* display value if clicking on own name
 * scroll value display
 * copy value/adress not working after name_new before name_firstupdate
 * parse value with configure
@@ -25,6 +25,7 @@ toDo
 * show pending operations (name_update, new value?)
 * review database
 x? * fix wrong wallet locked display while downloading blocks
+x* Namecoin Core not shutting down until nameGUI is closed
 x * bug: pending shows name in value
 x * auto lookup name new field
 x * sort columns
