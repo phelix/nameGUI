@@ -17,13 +17,13 @@ import collections
 import ttkinter as tk
 import tkMessageBox
 
-import validators
-
 import namedialog
 import shared
 import tkentryplus
 
 log = shared.get_my_logger(name=__file__)
+
+import validators
 
 def is_json(s):
     try:

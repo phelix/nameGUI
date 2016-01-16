@@ -7,7 +7,18 @@ sys.path.append("antpy")
 
 import splashscreen
 import os
+import traceback
 
+import shared
+log = shared.get_my_logger(name=__file__)
+
+def exception_display(msg):
+    log.exception(msg)
+    root = tk.Tk()
+    tk.Label(root, justify="left", text=traceback.format_exc() + '\n' + msg).pack()
+    tk.Button(root, text="OK", command=root.quit).pack()
+    root.focus_force()
+    root.mainloop()
 
 favicon = None
 #favicon = "gfx/favicon.gif"  # somebody try this on linux / mac
@@ -15,26 +26,27 @@ if os.name == "nt":
     favicon = "gfx/favicon.ico"
 splashscreen.splash("gfx/splash.gif", favicon=favicon)
 
-import ttkinter as tk
+try:
+    import time
+    import json
 
-import tkMessageBox
-import namedialog
+    import ttkinter as tk
 
-import model
-import antpy
+    import tkMessageBox
+    import namedialog
+    import jsonhyper
 
-import time
-import traceback
+    import model
+    import antpy
 
-import mylogging
-import shared
-import util
+    import util
 
-import json
+except ImportError as e:
+    exception_display(" Try 'pip install " + e.message.split(' ')[-1] + "'")
+except:
+    exception_display("Launch Error:")
 
 util.ensure_dirs(shared.CONFFOLDER)
-
-log = shared.get_my_logger(name=__file__)
 
 class SelectionEmptyError(Exception):
     pass
@@ -85,8 +97,9 @@ class Gui(object):
         # name lookup info
         self.displayNameDataLabel = tk.Label(self.root, justify="left", text=""
                                          ).grd(row=35, column=20, columnspan=120, sticky="w")
-        self.displayValueLabel = tk.Label(self.root, justify="left", text=""
+        self.displayValueText = tk.Text(self.root, bg=self.root.cget('bg'), border=0, height=1,
                                           ).grd(row=36, column=20, columnspan=120, sticky="w")
+        self.hyperParser = jsonhyper.Parser(self.displayValueText)
 
         # name table
         columns = ("name", "value", "address", "status", "expires_in")
@@ -170,26 +183,31 @@ class Gui(object):
     def display_name_data(self, name):
         self.displayNameDataLabel["text"] = ""
 
+        self.hyperParser.clear()
         if name == "":
-            self.displayValueLabel["text"] = ""
             return
 
         try:
             r = self.model.name_show(name)
         except model.NameDoesNotExistError:
-            self.displayValueLabel["text"] = "<available for registration>"
+            self.hyperParser.parse("<available for registration>")
             return
         except model.ClientError as e:
-            self.displayValueLabel["text"] = "<lookup failure: client error: %s>" % repr(e)
+            self.hyperParser.parse("<lookup failure: client error: %s>" % repr(e))
             return
         except (model.RpcError, model.RpcConnectionError) as e:
-            self.displayValueLabel["text"] = "<lookup failure: error: %s>" % repr(e)
+            self.hyperParser.parse("<lookup failure: error: %s>" % repr(e))
             return
 
-        v = str(r["value"])
-        if len(v) > 100:
-            v = v[:130] + "..."
-        self.displayValueLabel["text"] = v
+        value = r['value']
+        try:
+            value = json.loads(value)
+        except:
+            value = str(value)
+            if len(value) > 100:
+                value = value[:100] + "..."
+        self.hyperParser.parse(value)
+        self.hyperParser.refresh()
 
         r.pop("value")  # in place operation
         r.pop("txid")
@@ -358,12 +376,7 @@ def run():
         global gui  # for easy console access
         gui = Gui()
     except:
-        log.exception("Launch error:")
-        root = tk.Tk()
-        tk.Label(root, justify="left", text=traceback.format_exc()).pack()
-        tk.Button(root, text="OK", command=root.quit).pack()
-        root.focus_force()
-        root.mainloop()
+        exception_display("Gui error:")
 
 if __name__ == "__main__":
     run()
