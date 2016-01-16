@@ -17,6 +17,8 @@ Install Dependencies
 
 toDo
 ====
+* Namecoin Core not shutting down until nameGUI is closed
+* scroll value display
 * copy value/adress not working after name_new before name_firstupdate
 * parse value with configure
 * clear log file on load
