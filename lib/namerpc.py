@@ -186,8 +186,8 @@ class CoinRpc(object):
                     val["code"] = e.error["code"]
                 except KeyError:
                     val["code"] = "NA"
-            except Exception as e:
-                raise RpcError(e)
+            #except Exception as e:
+              #  raise RpcError(e)
         elif self.connectionType == CONTYPENMCONTROL:
             data = {"method": method, "params": params}
             resp = self.query_server(json.dumps(data))
