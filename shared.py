@@ -1,6 +1,7 @@
-import conf
 import sys
 sys.path.append("lib")
+sys.path.append('src')
+import conf
 import platformdep
 import mylogging
 

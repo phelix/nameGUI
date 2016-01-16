@@ -1,6 +1,7 @@
 import shared  # needs to be imported early because of configuration and cli parsing
 
 import sys
+sys.path.append("src")
 sys.path.append("lib")
 sys.path.append("antpy")
 
