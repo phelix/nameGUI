@@ -46,6 +46,8 @@ DEFAULTCLIENTPORT =  8336
 DEFAULTNMCONTROLPORT =  9000
 HOST = "127.0.0.1"
 
+COOKIEAUTH_FILE = ".cookie"
+
 CONTYPECLIENT = "client"
 CONTYPENMCONTROL = "nmcontrol"
 
@@ -237,10 +239,35 @@ class CoinRpc(object):
 
     def get_options(self):
         if self.connectionType == CONTYPECLIENT:
-            return self.get_options_client()
+            options = {}
+            try:
+                options = self.get_options_client()
+                if DEBUG:
+                    print "client options from conf file:", optoins
+            except:
+                pass
+            if not 'rpcuser' in options or not 'rpcpassword' in options:
+                # fall back to cookie authentication
+                options = self.get_cookie_auth(options)
+                if DEBUG:
+                    print "client options with cookie auth:", options
+            return options
         if self.connectionType == CONTYPENMCONTROL:
             return {"rpcport":DEFAULTNMCONTROLPORT}
         return None
+
+    def get_cookie_auth(self, options):
+        if DEBUG:
+            print "cookie auth"
+        try:
+            filename = self.datadir + "/" + COOKIEAUTH_FILE
+            with open(filename) as f:
+                    line = f.readline()
+                    options['rpcuser'], options['rpcpassword'] = line.split (':')
+        except IOError as e:
+            if e.errno == 2:
+                raise IOError(e.errno, "namerpc: Could not open cookie file: " + str(filename))
+        return options
 
     def get_options_client(self):
         """Read options (rpcuser/rpcpassword/rpcport) from .conf file."""
