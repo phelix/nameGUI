@@ -176,18 +176,7 @@ class CoinRpc(object):
 
     def call(self, method="getinfo", params=[]):
         if self.connectionType == CONTYPECLIENT:
-            val = {"error" : None, "code":None}
-            try:
-                if params:
-                    val["result"] = self.authServiceProxy.__getattr__(method)(*params)
-                else:
-                    val["result"] = self.authServiceProxy.__getattr__(method)()
-            except authproxy.JSONRPCException as e:
-                val = {"error" : e.error}
-                try:
-                    val["code"] = e.error["code"]
-                except KeyError:
-                    val["code"] = "NA"
+            val = self.query_server_asp(method, *params)
             #except Exception as e:
               #  raise RpcError(e)
         elif self.connectionType == CONTYPENMCONTROL:
@@ -206,6 +195,28 @@ class CoinRpc(object):
             raise RpcError(val)  # attn: different format for client and nmcontrol
 
         return val["result"]
+
+    def query_server_asp(self, method, *params):
+        val = {"error" : None, "code":None}
+        try:
+            try:
+                val['result'] = self.authServiceProxy.__getattr__(method)(*params)
+            except socket.error as e:
+                if e.errno == 10053:  # closed by host
+                    # workaround for closed connection - why? timeout?
+                    if DEBUG:
+                        print "connection closed by host, setting up new one"
+                    self.setup_authServiceProxy()
+                    val['result'] = self.authServiceProxy.__getattr__(method)(*params)
+                else:
+                    raise
+        except authproxy.JSONRPCException as e:
+            val = {"error" : e.error}
+            try:
+                val["code"] = e.error["code"]
+            except KeyError:
+                val["code"] = "NA"
+        return val
 
     def query_server(self, data):
         """Helper routine sending data to the RPC server and returning the result."""
@@ -339,6 +350,10 @@ if __name__ == "__main__":
     print rpc.call("getblockhash", [33])
     print rpc.call("getinfo")
     #print rpc.nm_show("d/nx")
+
+    # test timeout
+    time.sleep(66)
+    print rpc.call("getinfo")
 
     if len(sys.argv) == 1:
         print "========auto detect"
