@@ -287,7 +287,7 @@ class CoinRpc(object):
         if not self.datadir:
             self.datadir = self.get_conf_folder()
         try:
-            filename = self.datadir + "/" + COINAPP + ".conf"
+            filename = self.datadir + os.sep + COINAPP + ".conf"
             with open(filename) as f:
                 while True:
                     line = f.readline()
