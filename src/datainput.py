@@ -1,7 +1,7 @@
 
 """
 todo:
-  parse existing value for configure
+  change internals: value class with namespace specific functions and filters ?
   array input
   check all inputs
   implement fancy TLS ?
@@ -84,20 +84,30 @@ class Container(tk.Frame):
         if not visible:
             oD = {}
         return (self.key, oD)
+    def set(self, data):
+        for i in self.items:
+            if i.key in data:
+                i.set(data[i.key])
 
 class NamespaceContainer(Container):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, **kwargs):
         kwargs["padx"] = None  # no indentation for top level container
-        Container.__init__(self, *args, **kwargs)
+        Container.__init__(self, parent, **kwargs)
         tk.Label(self.outerFrame, text="Preview:").pk(side=tk.TOP, anchor=tk.NW, pady=(20,1))
         self.preview = tk.Message(self.outerFrame, text="", anchor=tk.NW).pk(side=tk.TOP,
                                                   anchor=tk.NW)
     def refresh(self):
-        self.preview["text"]= json.dumps(self.get_data())
+        self.preview["text"]= self.get_string()
         self.preview["width"] = self.outerFrame.winfo_width() - 30
     def get_data(self):
         key, oD = Container.get_data(self)  # key should be None
         return oD
+    def get_string(self):
+        data = self.get_data()
+        if type(data) == dict or type(data) == collections.OrderedDict:
+            return json.dumps(data)
+        else:
+            return data
 
 class InputGUI(object):
     def __init__(self, parent, text, visible):
@@ -135,7 +145,7 @@ class Input(InputGUI):
             self.entry.set(default)
     def refresh(self, trash):
         self.mood(self.validate())
-        self.parent.refresh()        
+        self.parent.refresh()
     def validate(self):
         if self.validator:
             s = self.get()
@@ -155,6 +165,8 @@ class NamespaceCustom(NamespaceContainer):
         self.input = Input(self, 'value', "Value (json):", validator=is_json)
     def get_data(self):
         return self.input.get()
+    def set(self, s):
+        self.input.set(s)
 
 class NamespaceId(NamespaceContainer):
     def setup(self):
@@ -203,13 +215,14 @@ if __name__ == "__main__":
               pass
     Container(root, '-', '-------')
     
-    with Container(root, 'test', 'test'):
-        Input(f, "ipv4", "IPv4:", validator=validators.ipv4)
-        with Container(f, 'c2') as f2:
+    with Container(root, 'test', 'test') as f1:
+        Input(f1, "ipv4", "IPv4:", validator=validators.ipv4)
+        with Container(f1, 'c2') as f2:
             Input(f2, 'fav1')
             Input(f2, 'fav2')
             with Container(f2, 'c3') as f3:
                 Input(f3, 'blub')
+    f1.set({'ipv4':'1.2.3.4', 'c2':{'fav1':"bla", 'c3':'breakit'}})
 
 
     def output():

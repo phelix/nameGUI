@@ -1,6 +1,6 @@
 import sys
-sys.path.append("lib")
-sys.path.append('src')
+sys.path.append('..')
+sys.path.append('../lib')
 
 import ttkinter as tk
 import tkMessageBox
@@ -10,8 +10,6 @@ import tkSimpleDialog
 # todo: make this more general (list of widget names from tk?)
 for s in ["Toplevel", "Button", "Label"]:
     tkSimpleDialog.__dict__[s] = tk.__dict__[s]
-
-import json
 
 import model
 import datainput
@@ -36,10 +34,10 @@ class PassphraseDialog(tkSimpleDialog.Dialog):
     def apply(self):
         self.passphrase = self.entry.get()
 
-class NameDialog(tkSimpleDialog.Dialog):
+class NameDialog(tkSimpleDialog.Dialog):  # also used for antpy
     dialogTitle = "NameDialog"
-    def __init__(self, model, parent, name):
-        self.model = model
+    def __init__(self, modl, parent, name):  # model is a module
+        self.model = modl
         self.parent = parent
         self.name = name
         tkSimpleDialog.Dialog.__init__(self, parent, title=self.dialogTitle)
@@ -55,13 +53,22 @@ class NameDialog(tkSimpleDialog.Dialog):
         return 1
     def get(self):
         pageNumber = self.notebook.index(self.notebook.select())
-        return json.dumps(self.namespaces[pageNumber].get_data())
+        return self.namespaces[pageNumber].get_string()
     def apply(self):
         '''This method is called automatically to process the data,
         *after* the dialog is destroyed.'''
         pass
 
 class NameConfigDialog(NameDialog):
+    def __init__(self, modl, parent, name):
+        self.value = ''
+        try:
+            self.value = modl.get_data(name)['value']
+        except model.NameDoesNotExistInWalletError:
+            pass
+        self.dValue = modl.parse_json(self.value)
+        NameDialog.__init__(self, modl, parent, name)
+
     def config(self, master):
         frame = tk.Frame(master)
         tk.Label(frame, justify="left", text="Name: " + self.name).grd(row=10, column=10, pady=5)
@@ -76,8 +83,14 @@ class NameConfigDialog(NameDialog):
         self.namespaces.append(datainput.NamespaceCustom(tk.Frame(self.notebook)))
         self.notebook.add(self.namespaces[-1].parent, text="Custom Configuration")
 
-        if self.name.startswith("id/"):
+        if self.name.startswith('d/'):
+            self.namespaces[0].set(self.dValue)
+        elif self.name.startswith("id/"):
             self.notebook.select(1)
+            self.namespaces[1].set(self.dValue)
+        else:
+            self.notebook.select(2)
+            self.namespaces[2].set(self.value)
 
         self.notebook.grd(column=10, columnspan=20)
 
@@ -154,9 +167,9 @@ if __name__ == "__main__":
     def on_click_new():
         print "NameNewDialog:", NameNewDialog(modelW, root, "d/dummyname")
     def on_click_configure():
-        print "NameConfigureDialog:", NameConfigureDialog(modelW, root, "d/dummyname")
+        print "NameConfigureDialog:", NameConfigureDialog(modelW, root, "id/phelix")
     def on_click_transfer():
-        print "NameTransferDialog:", NameTransferDialog(modelW, root, "d/dummyname",
+        print "NameTransferDialog:", NameTransferDialog(modelW, root, "d/nx",
                                                         validate_address_callback)
     def on_click_unlock():
         print "Unlock Dialog..."
