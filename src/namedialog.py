@@ -81,32 +81,10 @@ class NameConfigDialog(NameDialog):
 
         self.notebook.grd(column=10, columnspan=20)
 
-##        tk.Label(self.page1, justify="left", text="Value:").grd(row=30, column=10)
-##        self.valueEntry = tk.Entry(self.page1).grd(row=30, column=20)
-##        tk.Label(self.page1, justify="left", text="Value:").grd(row=30, column=10)
-##
-##        tk.Label(self.page1, justify="left", text="Valid JSON:").grd(row=40, column=10)
-##        self.validJsonLabel = tk.Label(self.page1, justify="left", text="...").grd(row=40, column=20)
-##
-##        self.valueEntry.bind("<FocusIn>", self.check_json)
-##        self.valueEntry.bind("<FocusOut>", self.check_json)
-##        self.valueEntry.bind("<KeyRelease>", self.check_json)
-##        self.valueEntry.bind("<<menu_modified>>", self.check_json)  # copy / paste
-
         #self.focus = self.valueEntry
         self.focus = None  # initial focus
 
         return frame
-
-##    def check_json(self, trash):
-##        s = self.valueEntry.get()
-##        try:
-##            json.loads(s)
-##            self.validJsonLabel["foreground"] = "black"
-##            self.validJsonLabel["text"] = "ok"
-##        except:
-##            self.validJsonLabel["foreground"] = "red"
-##            self.validJsonLabel["text"] = "fail"
 
     def body(self, master):
         self.config(master).grd(row=10, column=10, columnspan=100)
@@ -164,22 +142,6 @@ class NameTransferDialog(NameConfigDialog):
         r = self.model.name_transfer(self.name, value=value,
                                      address=targetAddress, guiParent=self.parent)
         tkMessageBox.showinfo(title="name_update response", message=r)
-
-
-### obsolete ?
-##class MessageDialog(tkSimpleDialog.Dialog):
-##    def __init__(self, parent, title=None, msg="test"):
-##        self.msg = msg
-##        tkSimpleDialog.Dialog.__init__(self, parent, title)
-##    def body(self, master):
-##        tk.Label(master, text=self.msg).pack()
-##    def buttonbox(self):
-##        box = tk.Frame(self)
-##        w = tk.Button(box, text="OK", width=10, command=self.ok, default=tk.ACTIVE)
-##        w.pack(side=tk.LEFT, padx=5, pady=5)
-##        self.bind("<Return>", self.ok)  # what happens with cancel focussed?
-##        self.bind("<Escape>", self.ok)
-##        box.pack()
 
 if __name__ == "__main__":
     root = tk.Tk()
