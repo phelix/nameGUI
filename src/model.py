@@ -26,6 +26,8 @@ RpcConnectionError = namerpc.RpcConnectionError
 ClientError = namerpc.ClientError
 clientErrorClasses = namerpc.clientErrorClasses
 
+class NameDoesNotExistInWalletError(NameDoesNotExistError):
+    pass
 class NameDoesAlreadyExistError(Exception):
     pass
 class WalletUnlockCancelledError(Exception):
@@ -265,8 +267,8 @@ class Model(object):
         """comfort function for a single name name_list"""
         try:
             data = self.call("name_list", [name])[0]
-        except namerpc.WalletError:
-            raise NameDoesNotExistError
+        except (namerpc.WalletError, IndexError):
+            raise NameDoesNotExistInWalletError
         assert data["name"] == name
         return data
 
