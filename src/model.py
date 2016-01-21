@@ -385,7 +385,7 @@ class Model(object):
     def blockchain_is_uptodate(self):
         return self.blockchainUptodate
 
-    def call(self, method, args=None, guiParent=None, rpc=None):
+    def call(self, method, args=[], guiParent=None, rpc=None):
         """will try to unlock the wallet if necessary"""
         if not rpc:
             rpc = self.rpc
