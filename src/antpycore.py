@@ -7,8 +7,9 @@ import namerpc
 
 import antpyshared
 
-debug = True
-if debug:
+debug = False
+if __name__ == '__main__':
+    debug = True
     import pprint
 
 class AntpyCore(object):
