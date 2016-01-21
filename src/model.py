@@ -48,52 +48,6 @@ nameTemplate = {
         "update" : None,  # name_update pending
     }
 
-##comfortmodel
-##
-##class UnlockedModel(object):
-##    """uses attribute notation ".method" to set up a callable instance of itself
-##that queries model rpc with method. e.g.: unlockedModel.getinfo()"""
-##    def __init__(self, model, method=None, parent=None, log=None, rpc=None):
-##        self.model = model
-##        self.rpc = rpc
-##        if not rpc:
-##            self.rpc = model.rpc
-##        self.parent = parent  # can be used by get_passphrase
-##        self.log = log
-##        if self.log == None:
-##            self.log = mylogging.getMyLogger(name="unlock", levelConsole=shared.LOGLEVELCONSOLE,
-##                                 filename=shared.LOGFILENAMEPATH, levelFile=shared.LOGLEVELFILE)
-##        self.method = method  # method to be thrown at the model when this class is called
-##        self.unlocked = False
-##        self.passphrase = None
-##    def __getattr__(self, attr):
-##        if attr.startswith("_"):
-##            raise AttributeError
-##        if not attr in dir(self):
-##            self.log.debug("UnlockedModel method:", attr)
-##            return self.__class__(self.model, parent=self.parent,
-##                                  method=attr, log=self.log, rpc=self.rpc)
-##        raise AttributeError
-##    def __call__(self, *args, **kwargs):
-##        print self.method, args
-##        try:
-##            f = self.model.__getattribute__(self.method)
-##            return f(*args, **kwargs)
-##        except AttributeError:
-##            self.log.debug("calling method:", self.method)
-##            while 1:
-##                self.call_unlocked(self.method, args)
-
-
-##class Gatekeeper(object):
-##    def __init__(self, model):
-##        self.model = model
-##    def __enter__(self):
-##        return self
-##    def __exit__(self, exc_type, exc_value, traceback):
-##        if self.model.unlocked:
-##            self.model.lock()
-
 class Model(object):
     def __init__(self):
         self.names = {}
