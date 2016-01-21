@@ -1,5 +1,6 @@
 import sys
-sys.path.append("lib")
+sys.path.append("..")
+sys.path.append("../lib")
 
 import traceback
 import lineperdic
@@ -15,6 +16,8 @@ import namerpc
 
 import time
 import threading
+
+import json
 
 # errors from namerpc for fine grained user info
 NameDoesNotExistError = namerpc.NameDoesNotExistError
@@ -267,6 +270,18 @@ class Model(object):
         assert data["name"] == name
         return data
 
+    def parse_json(self, s):
+        v = {}
+        try:
+            v = json.loads(s)
+        except ValueError:
+            self.log.debug("parse_json: json decode failed: " + str(s))
+            pass
+        return v
+
+    def get_value_dict(self, name):
+        return self.parse_json(self.get_data(name)['value'])
+
     def name_new(self, name, valuePostponed=None, guiParent=None):
         """value is safed for a postponed name firstupdate"""
         self.log.info("name_new:", name, valuePostponed)
@@ -389,10 +404,34 @@ class Model(object):
                       "It should return the passphrase or None to cancel.")
         return None
 
+class TestModel(object):
+    @classmethod
+    def setup_class(cls):
+        cls.m = Model()
+        import pytest
+        cls.pytest = pytest
+    @classmethod
+    def teardown_class(cls):
+        cls.m.stop()
+    def test_model_call(self):
+        assert self.m.call('getblockhash', [1984]) == '00000000003535a16c585a76c25ce9201edd6bf4d52fbf05efa30d5971f23c67'
+        assert 'version' in self.m.call('getinfo')
+    def test_model_validate_address(self):
+        assert self.m.validate_address('MwLm9TPCmk8JxwX8ysGGAp2nc4D8T5cKpW')
+        assert not self.m.validate_address('asdf')
+    def test_name_new_exists(self):
+        with self.pytest.raises(NameDoesAlreadyExistError):
+            self.m.name_new('d/namecoin')
+    def test_parse_json(self):
+        assert self.m.parse_json('asdf') == {}
+        assert self.m.parse_json('{"a":1}') == {"a":1}
 
 if __name__ == "__main__":
-    model = Model()
+    import utest
+    utest.run(__file__)
+
     if 0:
+        model = Model()
         try:
             while 1:
                 pass
