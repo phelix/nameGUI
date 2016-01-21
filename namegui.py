@@ -173,7 +173,10 @@ class Gui(object):
         if f == "name":
             self.set_clipboard(name)
         else:
-            self.set_clipboard(self.model.names[name][f])
+            try:
+                self.set_clipboard(self.model.names[name][f])
+            except KeyError:
+                tkMessageBox.showerror(title='Error', message="Sorry, data field not available.")
 
     def event_key_release_register(self, *trash):
         name = self.newEntry.get()
@@ -360,7 +363,6 @@ class Gui(object):
 
     def create_offer(self):
         name = self.newEntry.get()
-        print "name:'%s" % name
         antpy.CreateOfferDialog(self.model, self.root, name)
 
     def accept_offer(self):
