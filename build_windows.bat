@@ -15,8 +15,8 @@ xcopy lib dist\nameguiwin\lib /s /e /h /y
 xcopy gfx dist\nameguiwin\gfx /s /e /h /y
 xcopy src dist\nameguiwin\src /s /e /h /y
 
-rmdir dist\nameguiwin\_MEI\tk\images /s /q
-rmdir dist\nameguiwin\_MEI\tcl\tzdata /s /q
-rmdir dist\nameguiwin\_MEI\tcl\msgs /s /q
+rmdir dist\nameguiwin\tk\images /s /q
+rmdir dist\nameguiwin\tcl\tzdata /s /q
+rmdir dist\nameguiwin\tcl\msgs /s /q
 
 del dist\*.pyc /s /q
