@@ -9,7 +9,7 @@ import pytest
 def run(modules):
     if type(modules) != list:
         modules = [modules]
-        pytest.main(['-p', 'no:cacheprovider'] + modules)  # also stop pytest from creating .cache folder
+    pytest.main(['-p', 'no:cacheprovider'] + modules)  # also stop pytest from creating .cache folder
 
 if __name__ == '__main__':
 
@@ -18,5 +18,4 @@ if __name__ == '__main__':
     paths = []
     for folder in ['src', 'lib']:
         paths.extend(glob.glob(folder + '/*.py'))
-
     run(paths)
