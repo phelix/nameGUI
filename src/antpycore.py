@@ -135,11 +135,17 @@ class AntpyCore(object):
             raise Exception("All inputs already signed.")
         if len(vinDiff) != 1:
             raise Exception("Signed more than one input. Bailing due to fraud potential.")
-        if vinDiff[0]["value"] != antpyshared.NAMENEWFEENMC:
+
+        pTx = self.rpc_call("getrawtransaction", [vinDiff[0]["txid"], 1])
+
+        # check value of signed prevOut - this fails if the address holding the name is "loaded" with more than NAMENEWFEENMC
+        value = pTx["vout"][vinDiff[0]["vout"]]["value"]
+        print type(value)
+        assert type(value) == decimal.Decimal
+        if value != antpyshared.NAMENEWFEENMC:
             raise Exception("Signed wrong input value? (" + str(vinDiff[0]["value"]) + "NMC). Bailing due to fraud potential.")
 
         # verify name (necessary?)
-        pTx = self.rpc_call("getrawtransaction", [vinDiff[0]["txid"], 1])
         try:
             prevName = antpyshared.get_name(pTx["vout"])
         except IndexError:
