@@ -107,6 +107,8 @@ class Gui(object):
         self.root.columnconfigure(105, weight=10)  #minsize=minColumnWidth
         self.root.rowconfigure(40, weight=10)
         self.tv["selectmode"] = "browse"  # only allow to select a single item
+        self.tv.bind('<ButtonRelease-1>', self.event_tv_click)
+        self.tv.bind('<KeyRelease>', self.event_tv_click)        
 
         self.tv['show'] = 'headings'  # hide identifier and +
         ysb = tk.Scrollbar(self.root, orient='vertical', command=self.tv.yview).grd(
@@ -177,6 +179,14 @@ class Gui(object):
                 self.set_clipboard(self.model.names[name][f])
             except KeyError:
                 tkMessageBox.showerror(title='Error', message="Sorry, data field not available.")
+
+    def event_tv_click(self, *trash):
+        self.root.update_idletasks()
+        name = self.get_selection()
+        print name
+        self.newEntry.set(name)
+        self.display_name_data(name)
+        self.root.update_idletasks()
 
     def event_key_release_register(self, *trash):
         name = self.newEntry.get()

@@ -148,14 +148,12 @@ class Model(object):
                             self.unlockNeeded = True  # tkinter is not thread safe by default
                         except:
                             self.log.exception("poll: call to name_firstupdate_one failed:")
-                            time.sleep(POLLWAITSECONDS)
-                    else:
-                        time.sleep(POLLWAITSECONDS)
                     if self._updateNow:
                         break
                     if self._doStop:
                         self.stopped = True
                         return
+                    time.sleep(POLLWAITSECONDS)
             except:
                 self.log.exception("work on name_firstupdate queue failed:")
     def update(self, blocking=False):
