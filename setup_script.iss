@@ -1,4 +1,4 @@
-#define version "0.3.2"  ; also in shared.py
+#define version "0.3.3"  ; also in shared.py
 
 #define sourceFolder "dist\nameguiwin"
 #define progname "nameGUI"

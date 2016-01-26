@@ -5,7 +5,7 @@ import conf
 import platformdep
 import mylogging
 
-VERSION = "0.3.2"  # also in setup_script.iss
+VERSION = "0.3.3"  # also in setup_script.iss
 
 args = conf.get_args()  # configuration dictionary
 
