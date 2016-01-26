@@ -17,14 +17,14 @@ Install Dependencies
 
 toDo
 ====
-* display value if clicking on own name
 * scroll value display
 * copy value/adress not working after name_new before name_firstupdate
-* parse value with configure
 * clear log file on load
-* show pending operations (name_update, new value?)
+* show value for pending operations
 * review database
 x? * fix wrong wallet locked display while downloading blocks
+x* display value if clicking on own name
+x* parse value with configure
 x* Namecoin Core not shutting down until nameGUI is closed
 x * bug: pending shows name in value
 x * auto lookup name new field
@@ -39,12 +39,8 @@ canDo
 * display: "go back" function
 * display: follow import on click
 * better error handling and messages
-* offer to create .conf file if missing
 * right click menu for treeview table
-* improve display of lookup data
-* make lookup data clickable (e.g. email)
 * warn from expiry
-* integrate atomic name trading (antpy / nametrade.py)
 * launch namecoin client? / check if client available
 * filter columns
 * lock file to be only able to open one instance
@@ -54,6 +50,10 @@ canDo
 * allow selection and processing of multiple items
 * less rpc calls while blockchain not up to date yet
 * identify wallet via getnewaddress / getaccount <address> ???
+x * integrate atomic name trading (antpy / nametrade.py)
+x * make lookup data clickable (e.g. email)
+x * obsolete with cookie auth: offer to create .conf file if missing
+x * improve display of lookup data
 
 License
 =======
